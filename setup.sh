@@ -2,9 +2,7 @@
 
 if [ ! -e ${HOME}/.local ]; then
     if [ `uname -s` == "Darwin" ]; then
-        PYVER=`python3 --version | cut -d ' ' -f 2`
-        PYLOCAL="${HOME}/Library/Python/${PYVER}"
-        ln -sf ${PYLOCAL} ${HOME}/.local
+        ln -sf ${PYLOCAL} `python3 -c "import site; print(site.USER_BASE)"`
     else
         install -d ${HOME}/.local/tmp
     fi
@@ -19,10 +17,12 @@ if [ `uname -s` == "Darwin" -a `uname -m` == "arm64" ]; then
     [ -f ${HOME}/.local/tmp/pandoc-${PANDOC_VER}-arm64-macOS.zip ] && rm -f ${HOME}/.local/tmp/pandoc-${PANDOC_VER}-arm64-macOS.zip
     curl -s -S -L -O --output-dir ${HOME}/.local/tmp --create-dirs https://github.com/jgm/pandoc/releases/download/${PANDOC_VER}/pandoc-${PANDOC_VER}-arm64-macOS.zip
     unzip -q ${HOME}/.local/tmp/pandoc-${PANDOC_VER}-arm64-macOS.zip -d ${HOME}/.local
+    rm -f ${HOME}/.local/tmp/pandoc-${PANDOC_VER}-arm64-macOS.zip
 else
     [ -f ${HOME}/.local/tmp/pandoc-${PANDOC_VER}-linux-amd64.tar.gz ] && rm -f ${HOME}/.local/tmp/pandoc-${PANDOC_VER}-linux-amd64.tar.gz
     curl -s -S -L -O --output-dir ${HOME}/.local/tmp --create-dirs https://github.com/jgm/pandoc/releases/download/${PANDOC_VER}/pandoc-${PANDOC_VER}-linux-amd64.tar.gz
     tar zxf ${HOME}/.local/tmp/pandoc-${PANDOC_VER}-linux-amd64.tar.gz -C ${HOME}/.local
+    rm -f ${HOME}/.local/tmp/pandoc-${PANDOC_VER}-linux-amd64.tar.gz
 fi
 
 if [ -L ${HOME}/.local/pandoc ]; then
@@ -54,7 +54,7 @@ for dir in autoload bundle ftdetect ftplugin indent syntax; do
     install -d -o ${USER} ${HOME}/.vim/${dir}
 done
 pushd ${HOME}/.vim/bundle
-for repo in https://github.com/VundleVim/Vundle.vim.git git://github.com/tpope/vim-bundler.git https://github.com/nvie/vim-flake8.git https://github.com/tpope/vim-pathogen.git git://github.com/tpope/vim-projectionist.git https://github.com/Vimjas/vim-python-pep8-indent.git git://github.com/tpope/vim-rails.git git://github.com/tpope/vim-rake.git; do
+for repo in https://github.com/VundleVim/Vundle.vim.git https://github.com/tpope/vim-bundler.git https://github.com/nvie/vim-flake8.git https://github.com/tpope/vim-pathogen.git https://github.com/tpope/vim-projectionist.git https://github.com/Vimjas/vim-python-pep8-indent.git https://github.com/tpope/vim-rails.git https://github.com/tpope/vim-rake.git; do
     git clone ${repo} 
 done
 popd
