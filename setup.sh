@@ -48,3 +48,23 @@ if [ ! -d ${HOME}/.bash_it ]; then
     bash-it enable alias general git vim
     [ `uname -s` == "Darwin" ] && bash-it enable alias homebrew osx
 fi
+
+# Configure Vim
+for dir in autoload bundle ftdetect ftplugin indent syntax; do
+    install -d -o ${USER} ${HOME}/.vim/${dir}
+done
+pushd ${HOME}/.vim/bundle
+for repo in https://github.com/VundleVim/Vundle.vim.git git://github.com/tpope/vim-bundler.git https://github.com/nvie/vim-flake8.git https://github.com/tpope/vim-pathogen.git git://github.com/tpope/vim-projectionist.git https://github.com/Vimjas/vim-python-pep8-indent.git git://github.com/tpope/vim-rails.git git://github.com/tpope/vim-rake.git; do
+    git clone ${repo} 
+done
+popd
+[ -f ${HOME}/.vimrc ] && cp ${HOME}/.vimrc ${HOME}/.vimcrc.bak
+install -o ${USER} vimrc ${HOME}/.vimrc
+
+# Instal rc files
+[ -f ${HOME}/.bashrc ] && cp ${HOME}/.bashrc ${HOME}/.bashrc.bak
+install -o ${USER} bashrc ${HOME}/.bashrc
+[ -f ${HOME}/.bash_profile ] && cp ${HOME}/.bash_profile ${HOME}/.bash_profile.bak
+install -o ${USER} bash_profile ${HOME}/.bash_profile
+[ -f ${HOME}/.lessfilter ] && cp ${HOME}/.lessfilter ${HOME}/.lessfilter.bak
+install -o ${USER} lessfilter ${HOME}/.lessfilter
