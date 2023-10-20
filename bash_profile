@@ -17,7 +17,7 @@ esac
 ####
 # Configure Vim
 #
-if ! $( which -s vim ); then alias vim=`which vi`; fi
+if ! $( which vim 2>&1 > /dev/null ); then alias vim=`which vi`; fi
 export EDITOR=vim
 alias vi='echo "Use vim"'
 
