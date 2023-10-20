@@ -17,9 +17,9 @@ esac
 ####
 # Local paths
 #
-PATH=${PATH}:${HOME}/bin:${HOME}/.local/bin:${HOME}/.local/pandoc/bin
-MANPATH=${MANPATH}:${HOME}/share/man:${HOME}/.local/share/man:${HOME}/.local/pandoc/share/man
-LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:${HOME}/lib:${HOME}/local/lib
+PATH=${PATH}:${HOME}/.local/bin:${HOME}/.local/pandoc/bin
+MANPATH=${MANPATH}:${HOME}/.local/share/man:${HOME}/.local/pandoc/share/man
+LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:${HOME}/local/lib
 export PATH MANPATH LD_LIBRARY_PATH
 
 
