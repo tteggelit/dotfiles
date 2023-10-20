@@ -13,17 +13,19 @@ python3 -m pip install --user Pygments
 
 # Install Pandoc
 PANDOC_VER="3.1.8"
+pushd ${HOME}/.local/tmp
 if [ `uname -s` == "Darwin" -a `uname -m` == "arm64" ]; then
     [ -f ${HOME}/.local/tmp/pandoc-${PANDOC_VER}-arm64-macOS.zip ] && rm -f ${HOME}/.local/tmp/pandoc-${PANDOC_VER}-arm64-macOS.zip
-    curl -s -S -L -O --output-dir ${HOME}/.local/tmp --create-dirs https://github.com/jgm/pandoc/releases/download/${PANDOC_VER}/pandoc-${PANDOC_VER}-arm64-macOS.zip
-    unzip -q ${HOME}/.local/tmp/pandoc-${PANDOC_VER}-arm64-macOS.zip -d ${HOME}/.local
-    rm -f ${HOME}/.local/tmp/pandoc-${PANDOC_VER}-arm64-macOS.zip
+    curl -s -S -L -O https://github.com/jgm/pandoc/releases/download/${PANDOC_VER}/pandoc-${PANDOC_VER}-arm64-macOS.zip
+    unzip -q pandoc-${PANDOC_VER}-arm64-macOS.zip -d ${HOME}/.local
+    rm -f pandoc-${PANDOC_VER}-arm64-macOS.zip
 else
     [ -f ${HOME}/.local/tmp/pandoc-${PANDOC_VER}-linux-amd64.tar.gz ] && rm -f ${HOME}/.local/tmp/pandoc-${PANDOC_VER}-linux-amd64.tar.gz
-    curl -s -S -L -O --output-dir ${HOME}/.local/tmp --create-dirs https://github.com/jgm/pandoc/releases/download/${PANDOC_VER}/pandoc-${PANDOC_VER}-linux-amd64.tar.gz
-    tar zxf ${HOME}/.local/tmp/pandoc-${PANDOC_VER}-linux-amd64.tar.gz -C ${HOME}/.local
-    rm -f ${HOME}/.local/tmp/pandoc-${PANDOC_VER}-linux-amd64.tar.gz
+    curl -s -S -L -O https://github.com/jgm/pandoc/releases/download/${PANDOC_VER}/pandoc-${PANDOC_VER}-linux-amd64.tar.gz
+    tar zxf pandoc-${PANDOC_VER}-linux-amd64.tar.gz -C ${HOME}/.local
+    rm -f pandoc-${PANDOC_VER}-linux-amd64.tar.gz
 fi
+popd
 
 if [ -L ${HOME}/.local/pandoc ]; then
     unlink ${HOME}/.local/pandoc
