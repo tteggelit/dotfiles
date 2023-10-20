@@ -15,6 +15,15 @@ esac
 
 
 ####
+# Local paths
+#
+PATH=${PATH}:${HOME}/bin:${HOME}/.local/bin:${HOME}/.local/pandoc/bin
+MANPATH=${MANPATH}:${HOME}/share/man:${HOME}/.local/share/man:${HOME}/.local/pandoc/share/man
+LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:${HOME}/lib:${HOME}/local/lib
+export PATH MANPATH LD_LIBRARY_PATH
+
+
+####
 # Configure Vim
 #
 if ! $( which vim 2>&1 > /dev/null ); then alias vim=`which vi`; fi
