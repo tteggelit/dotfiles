@@ -66,7 +66,7 @@ fi
 # Homebrew GitHub token
 # export HOMEBREW_GITHUB_API_TOKEN="16eab4aa3f07289741fda2d8b1a3d344fd28d0a1"
 if [ `uname -s` == "Darwin" ]; then
-    export HOMEBREW_GITHUB_API_TOKEN="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"
+    export HOMEBREW_GITHUB_API_TOKEN="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" # No longer valid
     if [ `uname -m` == "arm64" ]; then
         eval "$(/opt/homebrew/bin/brew shellenv)"
     else
