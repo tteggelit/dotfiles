@@ -40,6 +40,16 @@ if [ ! -e ${PYLOCAL} ]; then
 fi
 install -d ${PYLOCAL}/tmp
 
+# Install flake8
+if $( ! `which -s flake8` ); then
+    if [ `uname -s` == "Darwin" ]; then
+        brew install flake8
+    else
+        python3 -m pip install --user flake8
+    fi
+fi
+
+
 # Install Pygments
 if $( ! `which -s pygmentize` ); then
     if [ `uname -s` == "Darwin" ]; then
@@ -105,7 +115,7 @@ repos[vim-projectionist]="https://github.com/tpope/vim-projectionist.git"
 repos[vim-python-pep8-indent]="https://github.com/Vimjas/vim-python-pep8-indent.git"
 repos[vim-rails]="https://github.com/tpope/vim-rails.git"
 repos[vim-rake]="https://github.com/tpope/vim-rake.git"
-repos[vim-plug.git]="https://github.com/junegunn/vim-plug.git"
+repos[vim-plug]="https://github.com/junegunn/vim-plug.git"
 
 for repo in ${!repos[@]}; do
     if [ -d ${repo} ]; then
@@ -113,13 +123,13 @@ for repo in ${!repos[@]}; do
         git pull
         popd
     else
-        git clone ${repo} 
+        git clone ${repos[${repo}]} 
     fi
 done
 popd
 
 # If the Plug isn't set to autoload, make it so
-[ ! -e ${HOME}/.vim/autoload/plug.vim ] && ln -sf ${HOME}/.vim/bundler/vim-plug/plug.vim ${HOME}/.vim/autoload/plug.vim
+[ ! -e ${HOME}/.vim/autoload/plug.vim ] && ln -sf ${HOME}/.vim/bundle/vim-plug/plug.vim ${HOME}/.vim/autoload/plug.vim
 
 [ -f ${HOME}/.vimrc ] && cp ${HOME}/.vimrc ${HOME}/.vimcrc.bak
 install -o ${USER} vimrc ${HOME}/.vimrc
