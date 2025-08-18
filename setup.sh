@@ -1,14 +1,60 @@
 #!/usr/bin/env bash
 
+HOME_EMAIL="ti@daleggetts.com"
+HOME_SSHKEY="ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIHMOKogNrOncCCAKczMINsi5rKoOOEEqLB+9bcNpzuDf"
+WORK_EMAIL="tileggett@nvidia.com"
+WORK_SSHKEY="ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAILvHbsE42CseuVtkD/FkLexiQq3Z5sanlXZWnizTSzCi"
+
+PROFILE="home"
+EMAIL=${HOME_EMAIL}
+SSHKEY=${HOME_SSHKEY}
+
+while getopts "w" opt; do
+    case ${opt} in
+        w)
+            PROFILE="work"
+            EMAIL=${WORK_EMAIL}
+            SSHKEY=${WORK_SSHKEY}
+            ;;
+        *)
+            PROFILE="home"
+            EMAIL=${HOME_EMAIL}
+            SSHKEY=${HOME_SSHKEY}
+            ;;
+    esac
+done
+
+# Git configuration
+REQUIRED_MAJOR=2
+REQUIRED_MINOR=34
+
+# Get installed Git version
+# Git signing was first instroduced in v2.34
+INSTALLED_VERSION=$(git --version | awk '{print $3}')
+INSTALLED_MAJOR=$(echo "$INSTALLED_VERSION" | cut -d. -f1)
+INSTALLED_MINOR=$(echo "$INSTALLED_VERSION" | cut -d. -f2)
+
+# Compare versions
+[ "`git config --global --get user.name`" != "Ti Leggett" ] && git config --global user.name "Ti Leggett"
+[ "`git config --global --get pull.rebase`" != "false" ] && git config --global pull.rebase "false"
+[ "`git config --global --get user.email`" != "${EMAIL}" ] && git config --global user.email "${EMAIL}"
+if (( INSTALLED_MAJOR > REQUIRED_MAJOR )) || \
+   (( INSTALLED_MAJOR == REQUIRED_MAJOR && INSTALLED_MINOR >= REQUIRED_MINOR )); then
+    [ "`git config --global --get user.signingkey`" != "${SSHKEY}" ] && git config --global user.signingkey "${SSHKEY}"
+    [ "`git config --global --get gpg.format`" != "ssh" ] && git config --global gpg.format "ssh"
+    [ "`git config --global --get commit.gpgsign`" != "true" ] && git config --global commit.gpgsign "true"
+    [ `uname -s` = "Darwin" -a "`git config --global --get gpg.ssh.program`" != "/Applications/1Password.app/Contents/MacOS/op-ssh-sign" ] && git config --global gpg.ssh.program "/Applications/1Password.app/Contents/MacOS/op-ssh-sign"
+fi
+
 # Install Homebrew (macOS)
-if [ `uname -s` == "Darwin" ]; then
-    if $( ! `which -s brew` ); then
+if [ `uname -s` = "Darwin" ]; then
+    if $( ! `which brew > /dev/null 2>&1` ); then
         /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
     fi
 fi
 
 # Install Terminal Defaults (macOS)
-if [ `uname -s` == "Darwin" ]; then
+if [ `uname -s` = "Darwin" ]; then
     TERM_DEFAULTS=`defaults write com.apple.Terminal "Default Window Settings"`
     if [ "${TERM_DEFAULTS}" != "Github Dark" ]; then
         open "Github Dark.terminal"
@@ -19,7 +65,7 @@ fi
 
 if ((BASH_VERSINFO < 4 )); then
     echo "Current running bash version is not greater than 4."
-    if [ `uname -s` == "Darwin" ]; then
+    if [ `uname -s` = "Darwin" ]; then
         echo "Installing newer bash via Homebrew."
         echo "After installation, edit Terminal settings to use newly isntalled bash."
         brew install bash
@@ -31,7 +77,7 @@ fi
 PYUSERBASE=`python3 -c "import site; print(site.USER_BASE)"`
 PYLOCAL=${HOME}/.local
 if [ ! -e ${PYLOCAL} ]; then
-    if [ `uname -s` == "Darwin" ]; then
+    if [ `uname -s` = "Darwin" ]; then
         [ ! -d ${PYUSERBASE} ] && install -d ${PYUSERBASE}
         ln -sf ${PYUSERBASE} ${PYLOCAL}
     else
@@ -41,8 +87,8 @@ fi
 install -d ${PYLOCAL}/tmp
 
 # Install flake8
-if $( ! `which -s flake8` ); then
-    if [ `uname -s` == "Darwin" ]; then
+if $( ! `which flake8 > /dev/null 2>&1` ); then
+    if [ `uname -s` = "Darwin" ]; then
         brew install flake8
     else
         python3 -m pip install --user flake8
@@ -51,8 +97,8 @@ fi
 
 
 # Install Pygments
-if $( ! `which -s pygmentize` ); then
-    if [ `uname -s` == "Darwin" ]; then
+if $( ! `which pygmentize > /dev/null 2>&1` ); then
+    if [ `uname -s` = "Darwin" ]; then
         brew install pygments
     else
         python3 -m pip install --user Pygments
@@ -60,29 +106,47 @@ if $( ! `which -s pygmentize` ); then
 fi
 
 # Install Pandoc
-if $( ! `which -s pygmentize` ); then
-    if [ `uname -s` == "Darwin" ]; then
+if $( ! `which pandoc > /dev/null 2>&1` ); then
+    if [ `uname -s` = "Darwin" ]; then
         brew install groff pandoc
     else
-        PANDOC_VER="3.1.8"
-        pushd ${PYLOCAL}/tmp
-        [ -f ${PYLOCAL}/tmp/pandoc-${PANDOC_VER}-linux-amd64.tar.gz ] && rm -f ${PYLOCAL}/tmp/pandoc-${PANDOC_VER}-linux-amd64.tar.gz
-        curl -s -S -L -O https://github.com/jgm/pandoc/releases/download/${PANDOC_VER}/pandoc-${PANDOC_VER}-linux-amd64.tar.gz
-        tar zxf pandoc-${PANDOC_VER}-linux-amd64.tar.gz -C ${PYLOCAL}
-        rm -f pandoc-${PANDOC_VER}-linux-amd64.tar.gz
-        popd
-        
-        if [ -L ${PYLOCAL}/pandoc ]; then
-            unlink ${PYLOCAL}/pandoc
-            ln -sf ${PYLOCAL}/pandoc-${PANDOC_VER} ${PYLOCAL}/pandoc
-        elif [ -d ${PYLOCAL}/pandoc ]; then
-            echo "!!!!! ${PYLOCAL}/pandoc exists. Moving out of the way. !!!!!"
-            mv ${PYLOCAL}/pandoc ${PYLOCAL}/pandoc.old
-            ln -sf ${PYLOCAL}/pandoc-${PANDOC_VER} ${PYLOCAL}/pandoc
-        elif [ -e ${PYLOCAL}/pandoc ]; then
-            echo "!!!!! ${PYLOCAL}/pandoc exists. Unsure what to do. !!!!!"
-        elif [ ! -e ${PYLOCAL}/pandoc ]; then
-            ln -sf ${PYLOCAL}/pandoc-${PANDOC_VER} ${PYLOCAL}/pandoc
+        case `uname -m` in
+            "x86_64")
+                PANDOC_ARCH="amd64"
+                ;;
+            "aarch64")
+                PANDOC_ARCH="arm64"
+                ;;
+            *)
+                PANDOC_ARCH="unknown"
+                ;;
+        esac
+        if [ ${PANDOC_ARCH} != "unknown" ]; then
+            PANDOC_VER="3.1.8"
+            pushd ${PYLOCAL}/tmp
+            [ -f ${PYLOCAL}/tmp/pandoc-${PANDOC_VER}-linux-${PANDOC_ARCH}.tar.gz ] && rm -f ${PYLOCAL}/tmp/pandoc-${PANDOC_VER}-linux-${PANDOC_ARCH}.tar.gz
+            curl -s -S -L -O https://github.com/jgm/pandoc/releases/download/${PANDOC_VER}/pandoc-${PANDOC_VER}-linux-${PANDOC_ARCH}.tar.gz
+            tar zxf pandoc-${PANDOC_VER}-linux-${PANDOC_ARCH}.tar.gz -C ${PYLOCAL}
+            rm -f pandoc-${PANDOC_VER}-linux-${PANDOC_ARCH}.tar.gz
+            popd
+            
+            if [ -L ${PYLOCAL}/pandoc ]; then
+                unlink ${PYLOCAL}/pandoc
+                ln -sf ${PYLOCAL}/pandoc-${PANDOC_VER} ${PYLOCAL}/pandoc
+            elif [ -d ${PYLOCAL}/pandoc ]; then
+                echo "!!!!! ${PYLOCAL}/pandoc exists. Moving out of the way. !!!!!"
+                mv ${PYLOCAL}/pandoc ${PYLOCAL}/pandoc.old
+                ln -sf ${PYLOCAL}/pandoc-${PANDOC_VER} ${PYLOCAL}/pandoc
+            elif [ -e ${PYLOCAL}/pandoc ]; then
+                echo "!!!!! ${PYLOCAL}/pandoc exists. Unsure what to do. !!!!!"
+            elif [ ! -e ${PYLOCAL}/pandoc ]; then
+                ln -sf ${PYLOCAL}/pandoc-${PANDOC_VER} ${PYLOCAL}/pandoc
+            fi
+            [ ! -L ${PYLOCAL}/bin/pandoc ] && ln -sf ${PYLOCAL}/pandoc/bin/pandoc ${PYLOCAL}/bin/pandoc
+            [ ! -d ${PYLOCAL}/share/man -o ! -d ${PYLOCAL}/share/man/man1 ] && install -d ${PYLOCAL}/share/man/man1
+            [ ! -L ${PYLOCAL}/share/man/man1/pandoc.1.gz ] && ln -sf ${PYLOCAL}/pandoc/share/man/man1/pandoc.1.gz ${PYLOCAL}/share/man/man1/pandoc.1.gz
+        else
+            echo "There isn't a prebuilt pandoc binary for this architecture. Install pandoc manually."
         fi
     fi
 fi
@@ -93,15 +157,15 @@ if [ ! -d ${HOME}/.bash_it ]; then
     ${HOME}/.bash_it/install.sh --silent --no-modify-config
     source ${HOME}/.bash_it/bash_it.sh
     bash-it enable plugin base git man ssh
-    [ `uname -s` == "Darwin" ] && bash-it enable plugin osx
+    [ `uname -s` = "Darwin" ] && bash-it enable plugin osx
     bash-it enable alias general git vim
-    [ `uname -s` == "Darwin" ] && bash-it enable alias homebrew osx
+    [ `uname -s` = "Darwin" ] && bash-it enable alias homebrew osx
 fi
 
 # Configure Vim
 # Make sure all the necessary directories exist
 for dir in autoload bundle ftdetect ftplugin indent syntax; do
-    install -d -o ${USER} ${HOME}/.vim/${dir}
+    install -d -o ${USER} -m 0755 ${HOME}/.vim/${dir}
 done
 
 # Download all the Vim bundles
@@ -131,16 +195,42 @@ popd
 # If the Plug isn't set to autoload, make it so
 [ ! -e ${HOME}/.vim/autoload/plug.vim ] && ln -sf ${HOME}/.vim/bundle/vim-plug/plug.vim ${HOME}/.vim/autoload/plug.vim
 
-[ -f ${HOME}/.vimrc ] && cp ${HOME}/.vimrc ${HOME}/.vimcrc.bak
-install -o ${USER} vimrc ${HOME}/.vimrc
-vim +PlugInstall +qall
+echo "Checking for differences of ${HOME}/.vimrc..."
+diff -u vimrc ${HOME}/.vimrc
+rc=$?
+if [ ${rc} -ne 0 ]; then
+    echo "Installing new ${HOME}/.vimrc. Refer to above for differences."
+    [ -f ${HOME}/.vimrc ] && cp ${HOME}/.vimrc ${HOME}/.vimcrc.bak
+    install -o ${USER} -m 0644 vimrc ${HOME}/.vimrc
+    vim +PlugInstall +qall
+fi
 
 # Instal rc files
-[ -f ${HOME}/.bashrc ] && cp ${HOME}/.bashrc ${HOME}/.bashrc.bak
-install -o ${USER} bashrc ${HOME}/.bashrc
-[ -f ${HOME}/.bash_profile ] && cp ${HOME}/.bash_profile ${HOME}/.bash_profile.bak
-install -o ${USER} bash_profile ${HOME}/.bash_profile
-[ -f ${HOME}/.lessfilter ] && cp ${HOME}/.lessfilter ${HOME}/.lessfilter.bak
-install -o ${USER} lessfilter ${HOME}/.lessfilter
+echo "Checking for differences of ${HOME}/.bashrc..."
+diff -u bashrc ${HOME}/.bashrc
+rc=$?
+if [ ${rc} -ne 0 ]; then
+    echo "Installing new ${HOME}/.bashrc. Refer to above for differences."
+    [ -f ${HOME}/.bashrc ] && cp ${HOME}/.bashrc ${HOME}/.bashrc.bak
+    install -o ${USER} -m 0644 bashrc ${HOME}/.bashrc
+fi
+
+echo "Checking for differences of ${HOME}/.bash_profile..."
+diff -u bash_profile ${HOME}/.bash_profile
+rc=$?
+if [ ${rc} -ne 0 ]; then
+    echo "Installing new ${HOME}/.bash_profile. Refer to above for differences."
+    [ -f ${HOME}/.bash_profile ] && cp ${HOME}/.bash_profile ${HOME}/.bash_profile.bak
+    install -o ${USER} -m 0644 bash_profile ${HOME}/.bash_profile
+fi
+
+echo "Checking for differences of ${HOME}/.lessfilter..."
+diff -u lessfilter ${HOME}/.lessfilter
+rc=$?
+if [ ${rc} -ne 0 ]; then
+    echo "Installing new ${HOME}/.lessfilter. Refer to above for differences."
+    [ -f ${HOME}/.lessfilter ] && cp ${HOME}/.lessfilter ${HOME}/.lessfilter.bak
+    install -o ${USER} -m 0755 lessfilter ${HOME}/.lessfilter
+fi
 
 [ -d ${PYLOCAL}/tmp ] && rm -rf ${PYLOCAL}/tmp
