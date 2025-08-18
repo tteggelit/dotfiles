@@ -55,8 +55,7 @@ fi
 
 # Install Terminal Defaults (macOS)
 if [ `uname -s` = "Darwin" ]; then
-    TERM_DEFAULTS=`defaults write com.apple.Terminal "Default Window Settings"`
-    if [ "${TERM_DEFAULTS}" != "Github Dark" ]; then
+    if [ "`defaults read com.apple.Terminal "Default Window Settings"`" != "Github Dark" ]; then
         open "Github Dark.terminal"
         defaults write com.apple.Terminal "Default Window Settings" -string "Github Dark"
         defaults write com.apple.Terminal "Startup Window Settings" -string "Github Dark"
