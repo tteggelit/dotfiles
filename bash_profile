@@ -65,9 +65,9 @@ fi
 #
 # Homebrew GitHub token
 # export HOMEBREW_GITHUB_API_TOKEN="16eab4aa3f07289741fda2d8b1a3d344fd28d0a1"
-if [ `uname -s` == "Darwin" ]; then
+if [ `uname -s` = "Darwin" ]; then
     export HOMEBREW_GITHUB_API_TOKEN="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" # No longer valid
-    if [ `uname -m` == "arm64" ]; then
+    if [ `uname -m` = "arm64" ]; then
         eval "$(/opt/homebrew/bin/brew shellenv)"
     else
         eval "$(/usr/local/bin/brew shellenv)"
@@ -77,7 +77,7 @@ fi
 ##
 # Configure bash_completion
 #
-if [ `uname -s` == "Darwin" ]; then
+if [ `uname -s` = "Darwin" ]; then
     [ -f ${HOMEBREW_PREFIX}/etc/profile.d/bash_completion.sh ] && . ${HOMEBREW_PREFIX}/etc/profile.d/bash_completion.sh
 fi
 
@@ -117,8 +117,8 @@ source "$BASH_IT"/bash_it.sh
 ####
 # Configure general overrides
 #
-if [ `uname -s` == "Linux" ]; then
+if [ `uname -s` = "Linux" ]; then
     alias ls='ls --color --classify'
-elif [ `uname -s` == "Darwin" ]; then
+elif [ `uname -s` = "Darwin" ]; then
     alias ls='ls -F -G'
 fi
