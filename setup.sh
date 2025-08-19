@@ -232,4 +232,29 @@ if [ ${rc} -ne 0 ]; then
     install -o ${USER} -m 0755 lessfilter ${HOME}/.lessfilter
 fi
 
+# Install XQuartz
+if [ `uname -s` = "Darwin" ]; then
+    if $( ! `which xauth > /dev/null 2>&1` ); then
+        echo "XQuartz not found. Installing XQuartz..."
+        brew install xquartz
+        if [ `uname -m` == "arm64" ]; then
+            eval "$(/opt/homebrew/bin/brew shellenv)"
+        else
+            eval "$(/usr/local/bin/brew shellenv)"
+        fi
+    fi
+fi
+
+# Configure SSH
+[ ! -d ${HOME}/.ssh ] && install -d -m 0700 ${HOME}/.ssh
+[ ! -d ${HOME}/.ssh/.control_channels ] && install -d -m 0700 ${HOME}/.ssh/.control_channels
+[ ! -f ${HOME}/.ssh/authorized_keys ] && touch ${HOME}/.ssh/authorized_keys && chmod 0600 ${HOME}/.ssh/authorized_keys
+if [ ! -f ${HOME}/.ssh/config ]; then
+    echo 'ControlPath ~/.ssh/.control_channels/%h:%p:%r' > ${HOME}/.ssh/config
+    if $( `which xauth > /dev/null 2>&1` ); then
+        echo "XauthLocation `which xauth`" >> ${HOME}/.ssh/config
+    fi
+    chmod 0600 ${HOME}/.ssh/config
+fi
+
 [ -d ${PYLOCAL}/tmp ] && rm -rf ${PYLOCAL}/tmp
