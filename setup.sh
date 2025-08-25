@@ -250,6 +250,7 @@ if [ `uname -s` = "Darwin" ]; then
         fi
     fi
 fi
+touch ${HOME}/.Xauthority
 
 # Configure SSH
 [ ! -d ${HOME}/.ssh ] && install -d -m 0700 ${HOME}/.ssh
