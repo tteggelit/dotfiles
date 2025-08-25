@@ -159,6 +159,12 @@ if [ ! -d ${HOME}/.bash_it ]; then
     [ `uname -s` = "Darwin" ] && bash-it enable plugin osx
     bash-it enable alias general git vim
     [ `uname -s` = "Darwin" ] && bash-it enable alias homebrew osx
+    [ `uname -s` = "Linux" ] && bash-it enable alias systemd
+    [ ${PROFILE} = "work" ] && bash-it enable alias vault
+    bash-it enable completion git pip pip3 pipx ssh
+    [ `uname -s` = "Darwin" ] && bash-it enable completion brew
+    [ ${PROFILE} = "work" ] && bash-it enable completion vault
+    bash-it reload
 fi
 
 # Configure Vim
