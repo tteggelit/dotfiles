@@ -264,4 +264,11 @@ if [ ! -f ${HOME}/.ssh/config ]; then
     chmod 0600 ${HOME}/.ssh/config
 fi
 
+# Slurm Configuration
+if [ ${PROFILE} = "work" ]; then
+    install -d ${HOME}/.vim/after/syntax/sh
+    curl --silent --remote-name https://raw.githubusercontent.com/SchedMD/slurm/refs/heads/master/contribs/slurm_completion_help/slurm.vim --output-dir ${HOME}/.vim/after/syntax/sh/
+    curl --silent --output ${HOME}/.slurm_completion.sh https://raw.githubusercontent.com/SchedMD/slurm/refs/heads/master/contribs/slurm_completion_help/slurm_completion.sh
+fi
+
 [ -d ${PYLOCAL}/tmp ] && rm -rf ${PYLOCAL}/tmp

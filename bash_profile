@@ -114,6 +114,9 @@ export SCM_CHECK=false
 # Load Bash It
 source "$BASH_IT"/bash_it.sh
 
+# Load Slurm completions
+[ -f ${HOME}/.slurm_completion.sh ] && source ${HOME}/.slurm_completion.sh
+
 ####
 # Configure general overrides
 #
