@@ -238,6 +238,15 @@ if [ ${rc} -ne 0 ]; then
     install -o ${USER} -m 0755 lessfilter ${HOME}/.lessfilter
 fi
 
+echo "Checking for differences of ${HOME}/.screenrc..."
+diff -u screenrc ${HOME}/.screenrd
+rc=$?
+if [ ${rc} -ne 0 ]; then
+    echo "Installing new ${HOME}/.screenrc. Refer to above for differences."
+    [ -f ${HOME}/.screenrc ] && cp ${HOME}/.screenrc ${HOME}/.screenrc.bak
+    install -o ${USER} -m 0644 screenrc ${HOME}/.screenrc
+fi
+
 # Install XQuartz
 if [ `uname -s` = "Darwin" ]; then
     if $( ! `which xauth > /dev/null 2>&1` ); then
@@ -267,7 +276,7 @@ fi
 # Slurm Configuration
 if [ ${PROFILE} = "work" ]; then
     install -d ${HOME}/.vim/after/syntax/sh
-    curl --silent --remote-name https://raw.githubusercontent.com/SchedMD/slurm/refs/heads/master/contribs/slurm_completion_help/slurm.vim --output-dir ${HOME}/.vim/after/syntax/sh/
+    curl --silent --output ${HOME}/.vim/after/syntax/sh/slurm.vim https://raw.githubusercontent.com/SchedMD/slurm/refs/heads/master/contribs/slurm_completion_help/slurm.vim
     curl --silent --output ${HOME}/.slurm_completion.sh https://raw.githubusercontent.com/SchedMD/slurm/refs/heads/master/contribs/slurm_completion_help/slurm_completion.sh
 fi
 

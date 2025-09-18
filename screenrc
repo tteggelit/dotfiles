@@ -1,0 +1,7 @@
+escape ^Xx
+unsetenv PROMPT_COMMAND
+startup_message off
+shell -$SHELL
+defscrollback 102400
+altscreen on
+defutf8 on
