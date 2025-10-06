@@ -9,12 +9,16 @@ PROFILE="home"
 EMAIL=${HOME_EMAIL}
 SSHKEY=${HOME_SSHKEY}
 
+SLURM="no"
 while getopts "w" opt; do
     case ${opt} in
         w)
             PROFILE="work"
             EMAIL=${WORK_EMAIL}
             SSHKEY=${WORK_SSHKEY}
+            ;;
+        s)
+            SLURM="yes"
             ;;
         *)
             PROFILE="home"
@@ -90,7 +94,7 @@ if $( ! `which flake8 > /dev/null 2>&1` ); then
     if [ `uname -s` = "Darwin" ]; then
         brew install flake8
     else
-        python3 -m pip install --user flake8
+        python3 -m pip install --user --break-system-packages flake8
     fi
 fi
 
@@ -100,7 +104,7 @@ if $( ! `which pygmentize > /dev/null 2>&1` ); then
     if [ `uname -s` = "Darwin" ]; then
         brew install pygments
     else
-        python3 -m pip install --user Pygments
+        python3 -m pip install --user --break-system-packages Pygments
     fi
 fi
 
@@ -274,7 +278,7 @@ if [ ! -f ${HOME}/.ssh/config ]; then
 fi
 
 # Slurm Configuration
-if [ ${PROFILE} = "work" ]; then
+if [ ${PROFILE} = "work" -a  ${SLURM} = "yes" ]; then
     install -d ${HOME}/.vim/after/syntax/sh
     curl --silent --output ${HOME}/.vim/after/syntax/sh/slurm.vim https://raw.githubusercontent.com/SchedMD/slurm/refs/heads/master/contribs/slurm_completion_help/slurm.vim
     curl --silent --output ${HOME}/.slurm_completion.sh https://raw.githubusercontent.com/SchedMD/slurm/refs/heads/master/contribs/slurm_completion_help/slurm_completion.sh
