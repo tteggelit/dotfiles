@@ -243,7 +243,7 @@ if [ ${rc} -ne 0 ]; then
 fi
 
 echo "Checking for differences of ${HOME}/.screenrc..."
-diff -u screenrc ${HOME}/.screenrd
+diff -u screenrc ${HOME}/.screenrc
 rc=$?
 if [ ${rc} -ne 0 ]; then
     echo "Installing new ${HOME}/.screenrc. Refer to above for differences."
