@@ -268,7 +268,9 @@ touch ${HOME}/.Xauthority
 # Configure SSH
 [ ! -d ${HOME}/.ssh ] && install -d -m 0700 ${HOME}/.ssh
 [ ! -d ${HOME}/.ssh/.control_channels ] && install -d -m 0700 ${HOME}/.ssh/.control_channels
-[ ! -f ${HOME}/.ssh/authorized_keys ] && touch ${HOME}/.ssh/authorized_keys && chmod 0600 ${HOME}/.ssh/authorized_keys && echo "${SSHKEY}" > ${HOME}/.ssh/authorized_keys
+if ! $( grep -q "${SSHKEY}" ~/.ssh/authorized_keys ); then
+    touch ${HOME}/.ssh/authorized_keys && chmod 0600 ${HOME}/.ssh/authorized_keys && echo "${SSHKEY}" >> ${HOME}/.ssh/authorized_keys
+fi
 if [ ! -f ${HOME}/.ssh/config ]; then
     echo 'ControlPath ~/.ssh/.control_channels/%h:%p:%r' > ${HOME}/.ssh/config
     if $( `which xauth > /dev/null 2>&1` ); then
