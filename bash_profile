@@ -24,6 +24,12 @@ export PATH MANPATH LD_LIBRARY_PATH
 
 
 ####
+# Configure grep
+#
+alias grep='grep --color=auto'
+
+
+####
 # Configure Vim
 #
 if ! $( which vim 2>&1 > /dev/null ); then alias vim=`which vi`; fi
