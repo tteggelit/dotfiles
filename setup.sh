@@ -89,12 +89,21 @@ if [ ! -e ${PYLOCAL} ]; then
 fi
 install -d ${PYLOCAL}/tmp
 
+PIP_VERSION=$(python -m pip --version | awk '{print $2}')
+PIP_MAJOR=$(echo "${PIP_VERSION}" | cut -d. -f1)
+PIP_MINOR=$(echo "${PIP_VERSION}" | cut -d. -f2)
+if (( PIP_MAJOR >= 23 && PIP_MINOR >= 1 )); then
+   PIP_OPTIONS="--user --break-system-packages"
+else 
+   PIP_OPTIONS="--user"
+fi
+
 # Install flake8
 if $( ! `which flake8 > /dev/null 2>&1` ); then
     if [ `uname -s` = "Darwin" ]; then
         brew install flake8
     else
-        python3 -m pip install --user --break-system-packages flake8
+        python3 -m pip install ${PIP_OPTIONS} flake8
     fi
 fi
 
@@ -104,7 +113,7 @@ if $( ! `which pygmentize > /dev/null 2>&1` ); then
     if [ `uname -s` = "Darwin" ]; then
         brew install pygments
     else
-        python3 -m pip install --user --break-system-packages Pygments
+        python3 -m pip install ${PIP_OPTIONS} Pygments
     fi
 fi
 
