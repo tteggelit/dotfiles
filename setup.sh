@@ -10,7 +10,7 @@ EMAIL=${HOME_EMAIL}
 SSHKEY=${HOME_SSHKEY}
 
 SLURM="no"
-while getopts "w" opt; do
+while getopts "sw" opt; do
     case ${opt} in
         w)
             PROFILE="work"
@@ -19,11 +19,6 @@ while getopts "w" opt; do
             ;;
         s)
             SLURM="yes"
-            ;;
-        *)
-            PROFILE="home"
-            EMAIL=${HOME_EMAIL}
-            SSHKEY=${HOME_SSHKEY}
             ;;
     esac
 done
