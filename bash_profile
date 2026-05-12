@@ -129,6 +129,9 @@ complete -F _tmux tmx2
 # Add SUP to path if available
 [ -d ${HOME}/git/sup-ssh-utils ] && export PATH=${HOME}/git/sup-ssh-utils:${PATH}
 
+# Add Jetski if available
+[ -d ${HOME}/.jetski/jetski/bin ] && export PATH="${HOME}/.jetski/jetski/bin:${PATH}"
+
 ####
 # Configure general overrides
 #
