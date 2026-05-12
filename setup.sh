@@ -3,7 +3,7 @@
 HOME_EMAIL="ti@daleggetts.com"
 HOME_SSHKEY="ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIHMOKogNrOncCCAKczMINsi5rKoOOEEqLB+9bcNpzuDf"
 WORK_EMAIL="tileggett@google.com"
-WORK_SSHKEY="ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBPBZJcRJEqcyZ6AvB18FkqcRldx6rK4Ty2G73rbntrficMf9UKWPSaBDupmW6tauRE3lpmlvJHGowg0L09xehwY="
+WORK_SSHKEY="key::ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBPBZJcRJEqcyZ6AvB18FkqcRldx6rK4Ty2G73rbntrficMf9UKWPSaBDupmW6tauRE3lpmlvJHGowg0L09xehwY= tileggett@gnubby.key"
 
 PROFILE="home"
 EMAIL=${HOME_EMAIL}
