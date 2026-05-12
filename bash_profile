@@ -123,6 +123,12 @@ source "$BASH_IT"/bash_it.sh
 # Load Slurm completions
 [ -f ${HOME}/.slurm_completion.sh ] && source ${HOME}/.slurm_completion.sh
 
+# Let tmx2 complete like tmux
+complete -F _tmux tmx2
+
+# Add SUP to path if available
+[ -d ${HOME}/git/sup-ssh-utils ] && export PATH=${HOME}/git/sup-ssh-utils:${PATH}
+
 ####
 # Configure general overrides
 #

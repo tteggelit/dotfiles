@@ -2,8 +2,8 @@
 
 HOME_EMAIL="ti@daleggetts.com"
 HOME_SSHKEY="ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIHMOKogNrOncCCAKczMINsi5rKoOOEEqLB+9bcNpzuDf"
-WORK_EMAIL="tileggett@nvidia.com"
-WORK_SSHKEY="ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAILvHbsE42CseuVtkD/FkLexiQq3Z5sanlXZWnizTSzCi"
+WORK_EMAIL="tileggett@google.com"
+WORK_SSHKEY="ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBPBZJcRJEqcyZ6AvB18FkqcRldx6rK4Ty2G73rbntrficMf9UKWPSaBDupmW6tauRE3lpmlvJHGowg0L09xehwY="
 
 PROFILE="home"
 EMAIL=${HOME_EMAIL}
@@ -84,10 +84,12 @@ if [ ! -e ${PYLOCAL} ]; then
 fi
 install -d ${PYLOCAL}/tmp
 
-PIP_VERSION=$(python -m pip --version | awk '{print $2}')
+PIP_VERSION=$(python3 -m pip --version | awk '{print $2}')
 PIP_MAJOR=$(echo "${PIP_VERSION}" | cut -d. -f1)
 PIP_MINOR=$(echo "${PIP_VERSION}" | cut -d. -f2)
 if (( PIP_MAJOR >= 23 && PIP_MINOR >= 1 )); then
+   PIP_OPTIONS="--user --break-system-packages"
+elif [ ${PROFILE} = "work" ]; then
    PIP_OPTIONS="--user --break-system-packages"
 else 
    PIP_OPTIONS="--user"
@@ -165,13 +167,16 @@ if [ ! -d ${HOME}/.bash_it ]; then
     source ${HOME}/.bash_it/bash_it.sh
     bash-it enable plugin base git man ssh
     [ `uname -s` = "Darwin" ] && bash-it enable plugin osx
+    [ ${PROFILE} = "work" ] && bash-it enable plugin tmux
     bash-it enable alias general git vim
     [ `uname -s` = "Darwin" ] && bash-it enable alias homebrew osx
     [ `uname -s` = "Linux" ] && bash-it enable alias systemd
-    [ ${PROFILE} = "work" ] && bash-it enable alias vault
+    #[ ${PROFILE} = "work" ] && bash-it enable alias vault
+    [ ${PROFILE} = "work" ] && bash-it enable alias tmux
     bash-it enable completion git pip pip3 pipx ssh
     [ `uname -s` = "Darwin" ] && bash-it enable completion brew
-    [ ${PROFILE} = "work" ] && bash-it enable completion vault
+    #[ ${PROFILE} = "work" ] && bash-it enable completion vault
+    [ ${PROFILE} = "work" ] && bash-it enable completion tmux
     bash-it reload
 fi
 
@@ -288,6 +293,17 @@ if [ ${PROFILE} = "work" -a  ${SLURM} = "yes" ]; then
     install -d ${HOME}/.vim/after/syntax/sh
     curl --silent --output ${HOME}/.vim/after/syntax/sh/slurm.vim https://raw.githubusercontent.com/SchedMD/slurm/refs/heads/master/contribs/slurm_completion_help/slurm.vim
     curl --silent --output ${HOME}/.slurm_completion.sh https://raw.githubusercontent.com/SchedMD/slurm/refs/heads/master/contribs/slurm_completion_help/slurm_completion.sh
+fi
+
+# SUP Configuration
+if [ ${PROFILE} = "work" ]; then
+    [ ! -d ${HOME}/git ] && install -d ${HOME}/git
+    pushd ${HOME}/git
+    git clone sso://cloudhpc/sup-ssh-utils
+    export PATH=${HOME}/git/sup-ssh-utils:${PATH}
+    cd sup-ssh-utils
+    ./setup-gcp-ssh-host.bash
+    popd
 fi
 
 [ -d ${PYLOCAL}/tmp ] && rm -rf ${PYLOCAL}/tmp
