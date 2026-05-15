@@ -132,6 +132,26 @@ complete -F _tmux tmx2
 # Add Jetski if available
 [ -d ${HOME}/.jetski/jetski/bin ] && export PATH="${HOME}/.jetski/jetski/bin:${PATH}"
 
+# Add GOPATH
+if $( ! `which go > /dev/null 2>&1` ); then
+    export PATH=${PATH}:$(go env GOPATH)/bin
+fi
+
+export VIRTUAL_ENV_DISABLE_PROMPT=1
+[ -f ${HOME}/.venv/bin/activate ] && source ${HOME}/.venv/bin/activate
+
+# Add Spack to path if available
+[ -f ${HOME}/git/spack/share/spack/setup-env.sh ] && source ${HOME}/git/spack/share/spack/setup-env.sh
+
+# Add Cluster Toolkit to path if available
+[ -x ${HOME}/git/cluster-toolkit/gcluster ] && export PATH="${PATH}:${HOME}/git/cluster-toolkit"
+
+# Enable gcloud autocomplete if available
+if [ -f '/usr/share/google-cloud-sdk/completion.bash.inc' ]
+then
+  source '/usr/share/google-cloud-sdk/completion.bash.inc'
+fi
+
 ####
 # Configure general overrides
 #

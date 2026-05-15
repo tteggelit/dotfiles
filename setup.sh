@@ -260,6 +260,15 @@ if [ ${rc} -ne 0 ]; then
     install -o ${USER} -m 0644 screenrc ${HOME}/.screenrc
 fi
 
+echo "Checking for differences of ${HOME}/.tmux.conf..."
+diff -u tmux.conf ${HOME}/.tmux.conf
+rc=$?
+if [ ${rc} -ne 0 ]; then
+    echo "Installing new ${HOME}/.tmux.conf. Refer to above for differences."
+    [ -f ${HOME}/.tmux.conf ] && cp ${HOME}/.tmux.conf ${HOME}/.tmux.conf.bak
+    install -o ${USER} -m 0644 tmux.conf ${HOME}/.tmux.conf
+fi
+
 # Install XQuartz
 if [ `uname -s` = "Darwin" ]; then
     if $( ! `which xauth > /dev/null 2>&1` ); then
@@ -295,15 +304,33 @@ if [ ${PROFILE} = "work" -a  ${SLURM} = "yes" ]; then
     curl --silent --output ${HOME}/.slurm_completion.sh https://raw.githubusercontent.com/SchedMD/slurm/refs/heads/master/contribs/slurm_completion_help/slurm_completion.sh
 fi
 
-# SUP Configuration
 if [ ${PROFILE} = "work" ]; then
+    [ `uname -s` = "Linux" ] && sudo apt install -y git-remote-google google-cloud-cli
+    if $( ! `which go > /dev/null 2>&1` ); then
+        export PATH=${PATH}:$(go env GOPATH)/bin
+    fi
     [ ! -d ${HOME}/git ] && install -d ${HOME}/git
     pushd ${HOME}/git
     git clone sso://cloudhpc/sup-ssh-utils
+    git clone --depth=2 https://github.com/spack/spack.git
+    git clone git@github.com:GoogleCloudPlatform/cluster-toolkit.git
+    git clone -c feature.manyFiles=true https://github.com/GoogleCloudPlatform/ramble.git
+    git clone sso://cloudhpc/hpc-toolkit-blueprints
+    git clone https://gerrit.googlesource.com/gcompute-tools
+    # SUP Configuration
     export PATH=${HOME}/git/sup-ssh-utils:${PATH}
     cd sup-ssh-utils
     ./setup-gcp-ssh-host.bash
+    cd ..
     popd
+    # Python venv
+    python3 -m venv ${HOME}/.venv
+    source ${HOME}/.venv/bin/activate
+    # Cluster Toolkit Contiguration
+    cd cluster-toolkit
+    make
+    cd ..
+    pip install -r ramble/requirements.txt
 fi
 
 [ -d ${PYLOCAL}/tmp ] && rm -rf ${PYLOCAL}/tmp
