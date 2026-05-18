@@ -146,12 +146,6 @@ export VIRTUAL_ENV_DISABLE_PROMPT=1
 # Add Cluster Toolkit to path if available
 [ -x ${HOME}/git/cluster-toolkit/gcluster ] && export PATH="${PATH}:${HOME}/git/cluster-toolkit"
 
-# Enable gcloud autocomplete if available
-if [ -f '/usr/share/google-cloud-sdk/completion.bash.inc' ]
-then
-  source '/usr/share/google-cloud-sdk/completion.bash.inc'
-fi
-
 ####
 # Configure general overrides
 #

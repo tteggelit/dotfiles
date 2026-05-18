@@ -176,7 +176,10 @@ if [ ! -d ${HOME}/.bash_it ]; then
     bash-it enable completion git pip pip3 pipx ssh
     [ `uname -s` = "Darwin" ] && bash-it enable completion brew
     #[ ${PROFILE} = "work" ] && bash-it enable completion vault
-    [ ${PROFILE} = "work" ] && bash-it enable completion tmux
+    bash-it enable completion tmux
+    if $( `which gcloud > /dev/null 2>&1` ); then
+        bash-it enable completion gcloud
+    fi
     bash-it reload
 fi
 
@@ -306,31 +309,81 @@ fi
 
 if [ ${PROFILE} = "work" ]; then
     [ `uname -s` = "Linux" ] && sudo apt install -y git-remote-google google-cloud-cli
-    if $( ! `which go > /dev/null 2>&1` ); then
+    if $( `which go > /dev/null 2>&1` ); then
         export PATH=${PATH}:$(go env GOPATH)/bin
     fi
-    [ ! -d ${HOME}/git ] && install -d ${HOME}/git
-    pushd ${HOME}/git
-    git clone sso://cloudhpc/sup-ssh-utils
-    git clone --depth=2 https://github.com/spack/spack.git
-    git clone git@github.com:GoogleCloudPlatform/cluster-toolkit.git
-    git clone -c feature.manyFiles=true https://github.com/GoogleCloudPlatform/ramble.git
-    git clone sso://cloudhpc/hpc-toolkit-blueprints
-    git clone https://gerrit.googlesource.com/gcompute-tools
+    git_dir="${HOME}/git"
+    [ ! -d ${git_dir} ] && install -d ${git_dir}
+    pushd ${git_dir}
+    repo_dir=sup-ssh-utils
+    if [ ! -d ${repo_dir} ]; then
+        git clone sso://cloudhpc/sup-ssh-utils
+    else
+        pushd ${repo_dir}
+        git pull
+        popd
+    fi
+    repo_dir=spack
+    if [ ! -d ${repo_dir} ]; then
+        git clone --depth=2 https://github.com/spack/spack.git
+    else
+        pushd ${repo_dir}
+        git pull
+        popd
+    fi
+    repo_dir=cluster-toolkit
+    if [ ! -d ${repo_dir} ]; then
+        git clone git@github.com:GoogleCloudPlatform/cluster-toolkit.git
+    else
+        pushd ${repo_dir}
+        git pull
+        popd
+    fi
+    repo_dir=ramble
+    if [ ! -d ${repo_dir} ]; then
+        git clone -c feature.manyFiles=true https://github.com/GoogleCloudPlatform/ramble.git
+    else
+        pushd ${repo_dir}
+        git pull
+        popd
+    fi
+    repo_dir=hpc-toolkit-blueprints
+    if [ ! -d ${repo_dir} ]; then
+        git clone sso://cloudhpc/hpc-toolkit-blueprints
+    else
+        pushd ${repo_dir}
+        git pull
+        popd
+    fi
+    repo_dir=gcompute-tools
+    if [ ! -d ${repo_dir} ]; then
+        git clone https://gerrit.googlesource.com/gcompute-tools
+    else
+        pushd ${repo_dir}
+        git pull
+        popd
+    fi
+    popd
     # SUP Configuration
-    export PATH=${HOME}/git/sup-ssh-utils:${PATH}
-    cd sup-ssh-utils
+    export PATH=${git_dir}/sup-ssh-utils:${PATH}
+    pushd ${git_dir}/sup-ssh-utils
     ./setup-gcp-ssh-host.bash
-    cd ..
     popd
     # Python venv
-    python3 -m venv ${HOME}/.venv
+    if [ ! -d ${HOME}/.venv ]; then
+        python3 -m venv ${HOME}/.venv
+    fi
     source ${HOME}/.venv/bin/activate
     # Cluster Toolkit Contiguration
-    cd cluster-toolkit
+    pushd ${git_dir}/cluster-toolkit
     make
-    cd ..
-    pip install -r ramble/requirements.txt
+    popd
+    export PATH=${PATH}:${HOME}/git/cluster-toolkit
+    CUSTOM_COMPL_FILE="${HOME}/.bash_it/completion/custom.completion.bash"
+    if command -v ghpc >/dev/null 2>&1 && { [ ! -f "${CUSTOM_COMPL_FILE}" ] || ! grep -q "gcluster" "${CUSTOM_COMPL_FILE}"; }; then
+        ghpc completion bash >> ${HOME}/.bash_it/completion/custom.completion.bash
+    fi
+    pip install -r ${git_dir}/ramble/requirements.txt
 fi
 
 [ -d ${PYLOCAL}/tmp ] && rm -rf ${PYLOCAL}/tmp
