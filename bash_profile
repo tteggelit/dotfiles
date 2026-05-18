@@ -133,7 +133,7 @@ complete -F _tmux tmx2
 [ -d ${HOME}/.jetski/jetski/bin ] && export PATH="${HOME}/.jetski/jetski/bin:${PATH}"
 
 # Add GOPATH
-if $( ! `which go > /dev/null 2>&1` ); then
+if command -v go > /dev/null 2>&1; then
     export PATH=${PATH}:$(go env GOPATH)/bin
 fi
 

@@ -10,6 +10,7 @@ EMAIL=${HOME_EMAIL}
 SSHKEY=${HOME_SSHKEY}
 
 SLURM="no"
+PRIVILEGED="no"
 while getopts "sw" opt; do
     case ${opt} in
         w)
@@ -19,6 +20,9 @@ while getopts "sw" opt; do
             ;;
         s)
             SLURM="yes"
+            ;;
+        p)
+            PRIVILEGED="yes"
             ;;
     esac
 done
@@ -89,7 +93,7 @@ PIP_MAJOR=$(echo "${PIP_VERSION}" | cut -d. -f1)
 PIP_MINOR=$(echo "${PIP_VERSION}" | cut -d. -f2)
 if (( PIP_MAJOR >= 23 && PIP_MINOR >= 1 )); then
    PIP_OPTIONS="--user --break-system-packages"
-elif [ ${PROFILE} = "work" ]; then
+elif [ ${PROFILE} = "work" -a  ${PRIVILEGED} = "yes" ]; then
    PIP_OPTIONS="--user --break-system-packages"
 else 
    PIP_OPTIONS="--user"
@@ -308,32 +312,57 @@ if [ ${PROFILE} = "work" -a  ${SLURM} = "yes" ]; then
 fi
 
 if [ ${PROFILE} = "work" ]; then
-    [ `uname -s` = "Linux" ] && sudo apt install -y git-remote-google google-cloud-cli
-    if $( `which go > /dev/null 2>&1` ); then
+    [ `uname -s` = "Linux" -a ${PRIVILEGED} = "yes" ] && sudo apt install -y git-remote-google google-cloud-cli
+    if command -v go > /dev/null 2>&1; then
         export PATH=${PATH}:$(go env GOPATH)/bin
     fi
     git_dir="${HOME}/git"
     [ ! -d ${git_dir} ] && install -d ${git_dir}
     pushd ${git_dir}
     repo_dir=sup-ssh-utils
-    if [ ! -d ${repo_dir} ]; then
-        git clone sso://cloudhpc/sup-ssh-utils
-    else
+    if [ ${PRIVILEGED} = "yes" ]; then
+        if [ ! -d ${repo_dir} ]; then
+            git clone sso://cloudhpc/sup-ssh-utils
+        fi
         pushd ${repo_dir}
         git pull
+        export PATH=${git_dir}/sup-ssh-utils:${PATH}
+        ./setup-gcp-ssh-host.bash
         popd
+        # Cluster Toolkit Contiguration
+        repo_dir=cluster-toolkit
+        if [ ! -d ${repo_dir} ]; then
+            git clone git@github.com:GoogleCloudPlatform/cluster-toolkit.git
+        fi
+        pushd ${repo_dir}
+        git pull
+        make
+        popd
+        export PATH=${PATH}:${HOME}/git/cluster-toolkit
+        CUSTOM_COMPL_FILE="${HOME}/.bash_it/completion/custom.completion.bash"
+        if command -v ghpc >/dev/null 2>&1 && { [ ! -f "${CUSTOM_COMPL_FILE}" ] || ! grep -q "gcluster" "${CUSTOM_COMPL_FILE}"; }; then
+            ghpc completion bash >> ${HOME}/.bash_it/completion/custom.completion.bash
+        fi
+        repo_dir=hpc-toolkit-blueprints
+        if [ ! -d ${repo_dir} ]; then
+            git clone sso://cloudhpc/hpc-toolkit-blueprints
+        else
+            pushd ${repo_dir}
+            git pull
+            popd
+        fi
+        repo_dir=gcompute-tools
+        if [ ! -d ${repo_dir} ]; then
+            git clone https://gerrit.googlesource.com/gcompute-tools
+        else
+            pushd ${repo_dir}
+            git pull
+            popd
+        fi
     fi
     repo_dir=spack
     if [ ! -d ${repo_dir} ]; then
         git clone --depth=2 https://github.com/spack/spack.git
-    else
-        pushd ${repo_dir}
-        git pull
-        popd
-    fi
-    repo_dir=cluster-toolkit
-    if [ ! -d ${repo_dir} ]; then
-        git clone git@github.com:GoogleCloudPlatform/cluster-toolkit.git
     else
         pushd ${repo_dir}
         git pull
@@ -347,42 +376,13 @@ if [ ${PROFILE} = "work" ]; then
         git pull
         popd
     fi
-    repo_dir=hpc-toolkit-blueprints
-    if [ ! -d ${repo_dir} ]; then
-        git clone sso://cloudhpc/hpc-toolkit-blueprints
-    else
-        pushd ${repo_dir}
-        git pull
-        popd
-    fi
-    repo_dir=gcompute-tools
-    if [ ! -d ${repo_dir} ]; then
-        git clone https://gerrit.googlesource.com/gcompute-tools
-    else
-        pushd ${repo_dir}
-        git pull
-        popd
-    fi
-    popd
-    # SUP Configuration
-    export PATH=${git_dir}/sup-ssh-utils:${PATH}
-    pushd ${git_dir}/sup-ssh-utils
-    ./setup-gcp-ssh-host.bash
     popd
     # Python venv
     if [ ! -d ${HOME}/.venv ]; then
         python3 -m venv ${HOME}/.venv
     fi
     source ${HOME}/.venv/bin/activate
-    # Cluster Toolkit Contiguration
-    pushd ${git_dir}/cluster-toolkit
-    make
-    popd
-    export PATH=${PATH}:${HOME}/git/cluster-toolkit
-    CUSTOM_COMPL_FILE="${HOME}/.bash_it/completion/custom.completion.bash"
-    if command -v ghpc >/dev/null 2>&1 && { [ ! -f "${CUSTOM_COMPL_FILE}" ] || ! grep -q "gcluster" "${CUSTOM_COMPL_FILE}"; }; then
-        ghpc completion bash >> ${HOME}/.bash_it/completion/custom.completion.bash
-    fi
+    pip install --upgrade pip
     pip install -r ${git_dir}/ramble/requirements.txt
 fi
 
