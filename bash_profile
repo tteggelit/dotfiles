@@ -143,6 +143,9 @@ export VIRTUAL_ENV_DISABLE_PROMPT=1
 # Add Spack to path if available
 [ -f ${HOME}/git/spack/share/spack/setup-env.sh ] && source ${HOME}/git/spack/share/spack/setup-env.sh
 
+# Add ramble to path if available
+[ -f ${HOME}/git/ramble/share/ramble/setup-env.sh ] && source ${HOME}/git/ramble/share/ramble/setup-env.sh
+
 # Add Cluster Toolkit to path if available
 [ -x ${HOME}/git/cluster-toolkit/gcluster ] && export PATH="${PATH}:${HOME}/git/cluster-toolkit"
 
