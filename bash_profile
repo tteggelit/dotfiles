@@ -67,6 +67,16 @@ fi
 
 
 ####
+# Keep SSH agent up to date
+#
+if [ -S "${SSH_AUTH_SOCK}" ] && [ ! -L "${SSH_AUTH_SOCK}" ]; then
+    ln -sf "${SSH_AUTH_SOCK}" ${HOME}/.ssh/ssh_auth_sock
+fi
+export SSH_AUTH_SOCK=${HOME}/.ssh/ssh_auth_sock
+# Keep SSH_AUTH_SOCK updated so tmux sessions also stay updated
+export PROMPT_COMMAND="${PROMPT_COMMAND:+$PROMPT_COMMAND; }export SSH_AUTH_SOCK=${HOME}/.ssh/ssh_auth_sock"
+
+####
 # Configure Homebrew
 #
 # Homebrew GitHub token

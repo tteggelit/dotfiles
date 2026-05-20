@@ -11,7 +11,7 @@ SSHKEY=${HOME_SSHKEY}
 
 SLURM="no"
 PRIVILEGED="no"
-while getopts "sw" opt; do
+while getopts "psw" opt; do
     case ${opt} in
         w)
             PROFILE="work"
@@ -313,6 +313,14 @@ fi
 
 if [ ${PROFILE} = "work" ]; then
     [ `uname -s` = "Linux" -a ${PRIVILEGED} = "yes" ] && sudo apt install -y git-remote-google google-cloud-cli
+    CUSTOM_ALIAS_FILE="${HOME}/.bash_it/aliases/custom.aliases.bash"
+    CUSTOM_COMPL_FILE="${HOME}/.bash_it/completion/custom.completion.bash"
+    if [ -f /google/bin/releases/jetski-devs/tools/cli ] && { [ ! -f "${CUSTOM_ALIAS_FILE}" ] || ! grep -q "jetski" "${CUSTOM_ALIAS_FILE}"; }; then
+        echo 'alias jetski="/google/bin/releases/jetski-devs/tools/cli"' >> ${CUSTOM_ALIAS_FILE}
+    fi
+    if [ -f /google/bin/releases/gemini-cli/tools/gemini ] && { [ ! -f "${CUSTOM_ALIAS_FILE}" ] || ! grep -q "jetski" "${CUSTOM_ALIAS_FILE}"; }; then
+        echo 'alias gemini="/google/bin/releases/gemini-cli/tools/gemini"' >> ${CUSTOM_ALIAS_FILE}
+    fi
     if command -v go > /dev/null 2>&1; then
         export PATH=${PATH}:$(go env GOPATH)/bin
     fi
@@ -339,7 +347,6 @@ if [ ${PROFILE} = "work" ]; then
         make
         popd
         export PATH=${PATH}:${HOME}/git/cluster-toolkit
-        CUSTOM_COMPL_FILE="${HOME}/.bash_it/completion/custom.completion.bash"
         if command -v ghpc >/dev/null 2>&1 && { [ ! -f "${CUSTOM_COMPL_FILE}" ] || ! grep -q "gcluster" "${CUSTOM_COMPL_FILE}"; }; then
             ghpc completion bash >> ${HOME}/.bash_it/completion/custom.completion.bash
         fi
@@ -375,6 +382,9 @@ if [ ${PROFILE} = "work" ]; then
         pushd ${repo_dir}
         git pull
         popd
+    fi
+    if [ ! -f "${CUSTOM_ALIAS_FILE}" ] || ! grep -q "prw" "${CUSTOM_ALIAS_FILE}"; then
+        echo 'alias prw="pushd ${RAMBLE_WORKSPACE}"' >> ${CUSTOM_ALIAS_FILE}
     fi
     popd
     # Python venv
