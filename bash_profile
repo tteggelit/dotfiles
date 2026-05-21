@@ -59,7 +59,7 @@ HISTCONTROL=ignorespace
 HISTSIZE=10000
 export HISTCONTROL HISTSIZE
 shopt -s histappend
-export PROMPT_COMMAND="history -a; history -r; $PROMPT_COMMAND"
+export PROMPT_COMMAND="history -a; history -r${PROMPT_COMMAND:+; $PROMPT_COMMAND}"
 
 if [[ -f ~/.dircolors ]]; then
     eval `dircolors ~/.dircolors`
