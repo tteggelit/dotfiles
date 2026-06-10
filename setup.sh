@@ -65,12 +65,12 @@ if [ `uname -s` = "Darwin" ]; then
     fi
 fi
 
-if ((BASH_VERSINFO < 4 )); then
+if ((BASH_VERSINFO <= 4 )); then
     echo "Current running bash version is not greater than 4."
     if [ `uname -s` = "Darwin" ]; then
         echo "Installing newer bash via Homebrew."
         echo "After installation, edit Terminal settings to use newly isntalled bash."
-        brew install bash
+        brew install bash bash-completion@2
     fi
     echo "Exiting."
     exit 1
