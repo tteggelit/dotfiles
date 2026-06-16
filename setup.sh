@@ -27,26 +27,52 @@ while getopts "psw" opt; do
     esac
 done
 
+# Get installed Git version
 # Git configuration
 REQUIRED_MAJOR=2
 REQUIRED_MINOR=34
 
 # Get installed Git version
-# Git signing was first instroduced in v2.34
+# Git signing was first introduced in v2.34
 INSTALLED_VERSION=$(git --version | awk '{print $3}')
 INSTALLED_MAJOR=$(echo "$INSTALLED_VERSION" | cut -d. -f1)
 INSTALLED_MINOR=$(echo "$INSTALLED_VERSION" | cut -d. -f2)
 
-# Compare versions
-[ "`git config --global --get user.name`" != "Ti Leggett" ] && git config --global user.name "Ti Leggett"
-[ "`git config --global --get pull.rebase`" != "false" ] && git config --global pull.rebase "false"
-[ "`git config --global --get user.email`" != "${EMAIL}" ] && git config --global user.email "${EMAIL}"
-if (( INSTALLED_MAJOR > REQUIRED_MAJOR )) || \
-   (( INSTALLED_MAJOR == REQUIRED_MAJOR && INSTALLED_MINOR >= REQUIRED_MINOR )); then
-    [ "`git config --global --get user.signingkey`" != "${SSHKEY}" ] && git config --global user.signingkey "${SSHKEY}"
-    [ "`git config --global --get gpg.format`" != "ssh" ] && git config --global gpg.format "ssh"
-    [ "`git config --global --get commit.gpgsign`" != "true" ] && git config --global commit.gpgsign "true"
-    [ `uname -s` = "Darwin" -a "`git config --global --get gpg.ssh.program`" != "/Applications/1Password.app/Contents/MacOS/op-ssh-sign" ] && git config --global gpg.ssh.program "/Applications/1Password.app/Contents/MacOS/op-ssh-sign"
+# Check if ssh-keygen supports the -Y flag required for SSH commit signing
+SSH_SIGNING_SUPPORTED="no"
+if command -v ssh-keygen >/dev/null 2>&1; then
+    # ssh-keygen outputs its usage to stderr when given an unknown flag or empty -Y
+    if ssh-keygen -Y sign 2>&1 | grep -q "unknown option"; then
+        SSH_SIGNING_SUPPORTED="no"
+    else
+        SSH_SIGNING_SUPPORTED="yes"
+    fi
+fi
+
+# Compare versions and enforce base configurations
+[ "$(git config --global --get user.name)" != "Ti Leggett" ] && git config --global user.name "Ti Leggett"
+[ "$(git config --global --get pull.rebase)" != "false" ] && git config --global pull.rebase "false"
+[ "$(git config --global --get user.email)" != "${EMAIL}" ] && git config --global user.email "${EMAIL}"
+
+# Determine if we can safely enable SSH commit signing
+GIT_VERSION_VALID=0
+if (( INSTALLED_MAJOR > REQUIRED_MAJOR )) || (( INSTALLED_MAJOR == REQUIRED_MAJOR && INSTALLED_MINOR >= REQUIRED_MINOR )); then
+    GIT_VERSION_VALID=1
+fi
+
+if [ ${GIT_VERSION_VALID} -eq 1 ] && [ "${SSH_SIGNING_SUPPORTED}" = "yes" ]; then
+    # Enable signing
+    [ "$(git config --global --get user.signingkey)" != "${SSHKEY}" ] && git config --global user.signingkey "${SSHKEY}"
+    [ "$(git config --global --get gpg.format)" != "ssh" ] && git config --global gpg.format "ssh"
+    [ "$(git config --global --get commit.gpgsign)" != "true" ] && git config --global commit.gpgsign "true"
+    [ "$(uname -s)" = "Darwin" -a -x "/Applications/1Password.app/Contents/MacOS/op-ssh-sign" -a "$(git config --global --get gpg.ssh.program)" != "/Applications/1Password.app/Contents/MacOS/op-ssh-sign" ] && git config --global gpg.ssh.program "/Applications/1Password.app/Contents/MacOS/op-ssh-sign"
+else
+    # Explicitly disable signing and clean up settings if not supported on this platform
+    echo "SSH commit signing is not supported on this platform (Missing Git 2.34+ or OpenSSH 8.2+). Disabling signing."
+    [ "$(git config --global --get commit.gpgsign)" = "true" ] && git config --global commit.gpgsign "false"
+    git config --global --unset user.signingkey 2>/dev/null
+    git config --global --unset gpg.format 2>/dev/null
+    git config --global --unset gpg.ssh.program 2>/dev/null
 fi
 
 # Install Homebrew (macOS)
