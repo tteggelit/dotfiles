@@ -12,14 +12,20 @@ set nohlsearch
 set bg=dark
 colorscheme ghdark
 set pastetoggle=<F12>
+"set paste
 set bs=2
 syntax on
 set ruler
-set paste
+set autoindent
 set shiftwidth=4
 set tabstop=4
 set softtabstop=4
 set expandtab
+" Override for YAML
+autocmd FileType yaml
+    \ setlocal shiftwidth=2
+    \ tabstop=2
+    \ softtabstop=2
 set backupdir=/tmp
 set directory=/tmp
 set mouse-=a
