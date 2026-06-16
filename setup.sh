@@ -72,8 +72,6 @@ if ((BASH_VERSINFO <= 4 )); then
         echo "After installation, edit Terminal settings to use newly isntalled bash."
         brew install bash bash-completion@2
     fi
-    echo "Exiting."
-    exit 1
 fi
 
 PYUSERBASE=`python3 -c "import site; print(site.USER_BASE)"`
@@ -385,6 +383,36 @@ if [ ${PROFILE} = "work" ]; then
     fi
     if [ ! -f "${CUSTOM_ALIAS_FILE}" ] || ! grep -q "prw" "${CUSTOM_ALIAS_FILE}"; then
         echo 'alias prw="pushd ${RAMBLE_WORKSPACE}"' >> ${CUSTOM_ALIAS_FILE}
+    fi
+    if [ ! -f "${CUSTOM_ALIAS_FILE}" ] || ! grep -q "ro" "${CUSTOM_ALIAS_FILE}"; then
+        echo 'alias ro="ramble on"' >> ${CUSTOM_ALIAS_FILE}
+    fi
+    if [ ! -f "${CUSTOM_ALIAS_FILE}" ] || ! grep -q "rwa" "${CUSTOM_ALIAS_FILE}"; then
+        echo 'alias rwa="ramble workspace activate"' >> ${CUSTOM_ALIAS_FILE}
+    fi
+    if [ ! -f "${CUSTOM_ALIAS_FILE}" ] || ! grep -q "rwan" "${CUSTOM_ALIAS_FILE}"; then
+        echo 'alias rwan="ramble workspace analyze"' >> ${CUSTOM_ALIAS_FILE}
+    fi
+    if [ ! -f "${CUSTOM_ALIAS_FILE}" ] || ! grep -q "rwc" "${CUSTOM_ALIAS_FILE}"; then
+        echo 'alias rwc="ramble workspace create"' >> ${CUSTOM_ALIAS_FILE}
+    fi
+    if [ ! -f "${CUSTOM_ALIAS_FILE}" ] || ! grep -q "rwd" "${CUSTOM_ALIAS_FILE}"; then
+        echo 'alias rwd="ramble workspace deactivate"' >> ${CUSTOM_ALIAS_FILE}
+    fi
+    if [ ! -f "${CUSTOM_ALIAS_FILE}" ] || ! grep -q "rwe" "${CUSTOM_ALIAS_FILE}"; then
+        echo 'alias rwe="ramble workspace edit"' >> ${CUSTOM_ALIAS_FILE}
+    fi
+    if [ ! -f "${CUSTOM_ALIAS_FILE}" ] || ! grep -q "rwi" "${CUSTOM_ALIAS_FILE}"; then
+        echo 'alias rwi="ramble workspace info"' >> ${CUSTOM_ALIAS_FILE}
+    fi
+    if [ ! -f "${CUSTOM_ALIAS_FILE}" ] || ! grep -q "rwls" "${CUSTOM_ALIAS_FILE}"; then
+        echo 'alias rwls="ramble workspace list"' >> ${CUSTOM_ALIAS_FILE}
+    fi
+    if [ ! -f "${CUSTOM_ALIAS_FILE}" ] || ! grep -q "rwrm" "${CUSTOM_ALIAS_FILE}"; then
+        echo 'alias rwrm="ramble workspace remove"' >> ${CUSTOM_ALIAS_FILE}
+    fi
+    if [ ! -f "${CUSTOM_ALIAS_FILE}" ] || ! grep -q "rws" "${CUSTOM_ALIAS_FILE}"; then
+        echo 'alias rws="ramble workspace setup"' >> ${CUSTOM_ALIAS_FILE}
     fi
     popd
     # Python venv
