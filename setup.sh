@@ -351,8 +351,8 @@ if [ ${PROFILE} = "work" ]; then
     git_dir="${HOME}/git"
     [ ! -d ${git_dir} ] && install -d ${git_dir}
     pushd ${git_dir}
-    repo_dir=sup-ssh-utils
     if [ ${PRIVILEGED} = "yes" ]; then
+        repo_dir=sup-ssh-utils
         if [ ! -d ${repo_dir} ]; then
             git clone sso://cloudhpc/sup-ssh-utils
         fi
