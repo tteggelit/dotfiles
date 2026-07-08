@@ -399,12 +399,24 @@ if [ ${PROFILE} = "work" ]; then
         git pull
         popd
     fi
-    repo_dir=ramble
+    repo_dir=spack-packages
     if [ ! -d ${repo_dir} ]; then
-        git clone -c feature.manyFiles=true https://github.com/GoogleCloudPlatform/ramble.git
+        git clone --depth=2 git@github.com:tteggelit/spack-packages.git
     else
         pushd ${repo_dir}
         git pull
+        git remote add upstream https://github.com/spack/spack.git
+        git fetch upstream
+        popd
+    fi
+    repo_dir=ramble
+    if [ ! -d ${repo_dir} ]; then
+        git clone -c feature.manyfiles=true git@github.com:tteggelit/ramble.git
+    else
+        pushd ${repo_dir}
+        git pull
+        git remote add upstream https://github.com/GoogleCloudPlatform/ramble.git
+        git fetch upstream
         popd
     fi
     if [ ! -f "${CUSTOM_ALIAS_FILE}" ] || ! grep -q "prw" "${CUSTOM_ALIAS_FILE}"; then
