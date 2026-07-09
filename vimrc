@@ -8,15 +8,19 @@ call plug#end()
 
 set nocompatible
 filetype plugin indent on
-set nohlsearch
-highlight ExtraWhitespace ctermbg=red guibg=red
-match ExtraWhitespace /\s\+$/
+syntax on
 set bg=dark
 colorscheme ghdark
+set nohlsearch
+" Highlight trailing whitespace (defined AFTER the colorscheme)
+highlight ExtraWhitespace ctermbg=red guibg=red
+
+" Automatically match trailing whitespace in all windows, skipping terminal buffers
+autocmd VimEnter,WinEnter * if &buftype != 'terminal' | match ExtraWhitespace /\s\+$/ | endif
+
 set pastetoggle=<F12>
 "set paste
 set bs=2
-syntax on
 set ruler
 set autoindent
 set shiftwidth=4
