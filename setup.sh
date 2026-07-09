@@ -460,6 +460,11 @@ if [ ${PROFILE} = "work" ]; then
     source ${HOME}/.venv/bin/activate
     pip install --upgrade pip
     pip install -r ${git_dir}/ramble/requirements.txt
+    pip install -r ${git_dir}/ramble/requirements-dev.txt
+    if [ ! -x ${git_dir}/ramble/.git/hooks/pre-commit ]; then
+        pushd ${git_dir}/ramble
+        pre-commit install
+    fi
 fi
 
 [ -d ${PYLOCAL}/tmp ] && rm -rf ${PYLOCAL}/tmp
