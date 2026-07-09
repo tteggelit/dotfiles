@@ -9,6 +9,8 @@ call plug#end()
 set nocompatible
 filetype plugin indent on
 set nohlsearch
+highlight ExtraWhitespace ctermbg=red guibg=red
+match ExtraWhitespace /\s\+$/
 set bg=dark
 colorscheme ghdark
 set pastetoggle=<F12>
