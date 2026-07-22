@@ -92,6 +92,7 @@ if [ `uname -s` = "Darwin" ]; then
         open "Github Dark.terminal"
         defaults write com.apple.Terminal "Default Window Settings" -string "Github Dark"
         defaults write com.apple.Terminal "Startup Window Settings" -string "Github Dark"
+        defaults write com.apple.Terminal CopyAttributesProfile com.apple.Terminal.no-attributes
     fi
 fi
 
