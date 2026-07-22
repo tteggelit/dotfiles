@@ -53,6 +53,10 @@ fi
 [ "$(git config --global --get user.name)" != "Ti Leggett" ] && git config --global user.name "Ti Leggett"
 [ "$(git config --global --get pull.rebase)" != "false" ] && git config --global pull.rebase "false"
 [ "$(git config --global --get user.email)" != "${EMAIL}" ] && git config --global user.email "${EMAIL}"
+if ! $( grep -q ".vscode/" ~/.gitignore_global ); then
+    echo ".vscode/" >> "${HOME}/.gitignore_global"
+    [ "$(git config --global --get core.excludefiles)" != "${HOME}/.gitignore_global" ] && git config --global core.excludesfile "${HOME}/.gitignore_global"
+fi
 
 # Determine if we can safely enable SSH commit signing
 GIT_VERSION_VALID=0
