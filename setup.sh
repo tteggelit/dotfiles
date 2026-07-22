@@ -405,7 +405,7 @@ if [ ${PROFILE} = "work" ]; then
     else
         pushd ${repo_dir}
         git pull
-        git remote add upstream https://github.com/spack/spack.git
+        git remote add upstream https://github.com/spack/spack-packages.git
         git fetch upstream
         popd
     fi
