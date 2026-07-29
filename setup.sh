@@ -113,6 +113,8 @@ if [ ! -e ${PYLOCAL} ]; then
         ln -sf ${PYUSERBASE} ${PYLOCAL}
     else
         install -d ${PYLOCAL}
+        install -d ${PYLOCAL}/bin
+        install -d ${PYLOCAL}/share
     fi
 fi
 install -d ${PYLOCAL}/tmp
