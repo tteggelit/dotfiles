@@ -5,6 +5,8 @@ HOME_SSHKEY="ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIHMOKogNrOncCCAKczMINsi5rKoOOEE
 WORK_EMAIL="tileggett@google.com"
 WORK_SSHKEY="key::ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBPBZJcRJEqcyZ6AvB18FkqcRldx6rK4Ty2G73rbntrficMf9UKWPSaBDupmW6tauRE3lpmlvJHGowg0L09xehwY= tileggett@gnubby.key"
 
+SPACK_VERSION="1.2.2"
+
 PROFILE="home"
 EMAIL=${HOME_EMAIL}
 SSHKEY=${HOME_SSHKEY}
@@ -404,6 +406,8 @@ if [ ${PROFILE} = "work" ]; then
     else
         pushd ${repo_dir}
         git pull
+        git fetch --tags
+        git checkout tags/v${SPACK_VERSION}
         popd
     fi
     repo_dir=spack-packages
