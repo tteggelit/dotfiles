@@ -28,7 +28,7 @@ setup_git() {
     # Fix: Bug #3 - avoid executing the output of grep as a command
     if ! grep -q ".vscode/" "${HOME}/.gitignore_global" 2>/dev/null; then
         echo ".vscode/" >> "${HOME}/.gitignore_global"
-        [ "$(git config --global --get core.excludefiles)" != "${HOME}/.gitignore_global" ] && git config --global core.excludesfile "${HOME}/.gitignore_global"
+        [ "$(git config --global --get core.excludesfile)" != "${HOME}/.gitignore_global" ] && git config --global core.excludesfile "${HOME}/.gitignore_global"
     fi
 
     local GIT_VERSION_VALID=0
@@ -49,10 +49,15 @@ setup_git() {
     else
         echo "SSH commit signing is not supported on this platform (Missing Git 2.34+ or OpenSSH 8.2+). Disabling signing."
         [ "$(git config --global --get commit.gpgsign)" = "true" ] && git config --global commit.gpgsign "false"
-        git config --global --unset user.signingkey 2>/dev/null
-        git config --global --unset gpg.format 2>/dev/null
-        git config --global --unset gpg.ssh.program 2>/dev/null
+
+        # Fix: Add || true to allow unsetting to be a no-op if keys don't exist (Exit Code 5)
+        git config --global --unset user.signingkey 2>/dev/null || true
+        git config --global --unset gpg.format 2>/dev/null || true
+        git config --global --unset gpg.ssh.program 2>/dev/null || true
     fi
+
+    # Explicitly return 0 so short-circuits don't accidentally leak non-zero exits
+    return 0
 }
 
 run_task "Configure Git and SSH signing" setup_git
