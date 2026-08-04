@@ -7,6 +7,10 @@ WORK_SSHKEY="key::ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdH
 
 SPACK_VERSION="1.2.2"
 
+ALLOWED_GCP_SA_HASHES=(
+    "74c2432577bbc644b93f21e9b502ee9795a248a69b6e3f97b3468ad2209b9c86"
+)
+
 PROFILE="home"
 EMAIL=${HOME_EMAIL}
 SSHKEY=${HOME_SSHKEY}
@@ -175,7 +179,7 @@ if $( ! `which pandoc > /dev/null 2>&1` ); then
             tar zxf pandoc-${PANDOC_VER}-linux-${PANDOC_ARCH}.tar.gz -C ${PYLOCAL}
             rm -f pandoc-${PANDOC_VER}-linux-${PANDOC_ARCH}.tar.gz
             popd
-            
+
             if [ -L ${PYLOCAL}/pandoc ]; then
                 unlink ${PYLOCAL}/pandoc
                 ln -sf ${PYLOCAL}/pandoc-${PANDOC_VER} ${PYLOCAL}/pandoc
@@ -245,7 +249,7 @@ for repo in ${!repos[@]}; do
         git pull
         popd
     else
-        git clone ${repos[${repo}]} 
+        git clone ${repos[${repo}]}
     fi
 done
 popd
@@ -348,6 +352,14 @@ if [ ${PROFILE} = "work" ]; then
     [ `uname -s` = "Linux" -a ${PRIVILEGED} = "yes" ] && sudo apt install -y git-remote-google google-cloud-cli
     CUSTOM_ALIAS_FILE="${HOME}/.bash_it/aliases/custom.aliases.bash"
     CUSTOM_COMPL_FILE="${HOME}/.bash_it/completion/custom.completion.bash"
+
+    # Python venv
+    if [ ! -d ${HOME}/.venv ]; then
+        python3 -m venv ${HOME}/.venv
+    fi
+    source ${HOME}/.venv/bin/activate
+    pip install --upgrade pip
+
     if [ -f /google/bin/releases/jetski-devs/tools/cli ] && { [ ! -f "${CUSTOM_ALIAS_FILE}" ] || ! grep -q "jetski" "${CUSTOM_ALIAS_FILE}"; }; then
         echo 'alias jetski="/google/bin/releases/jetski-devs/tools/cli"' >> ${CUSTOM_ALIAS_FILE}
     fi
@@ -373,7 +385,6 @@ if [ ${PROFILE} = "work" ]; then
         ./setup-gcp-ssh-host.bash
         popd
     else
-        gerrit_url="https://cloudhpc.googlesource.com"
         repo_dir=gcompute-tools
         if [ ! -d ${repo_dir} ]; then
             git clone https://gerrit.googlesource.com/${repo_dir}
@@ -393,7 +404,7 @@ After=syslog.target network-online.target
 
 [Service]
 Type=simple
-ExecStart=${gerrit_dir}/${repo_dir}/git-cookie-authdaemon
+ExecStart=${HOME}/.venv/bin/python3 ${gerrit_dir}/${repo_dir}/git-cookie-authdaemon
 Restart=on-failure
 RestartSec=10
 KillMode=process
@@ -401,14 +412,62 @@ KillMode=process
 [Install]
 WantedBy=multi-user.target
 EOF
+        # TODO: Start the systemd service once that's debugged, for now start it manually
+        #systemctl --user daemon-reload
+        #systemctl --user enable --now git-cookie-authdaemon
+        [ $(pgrep --uid $(id -u) --full --count git-cookie-authdaemon) -eq 0 ] && ${HOME}/.venv/bin/python3 ${gerrit_dir}/${repo_dir}/git-cookie-authdaemon
+        [ "$(git config --global --get http.cookiefile)" != "${HOME}/.git-credential-cache/cookie" ] && git config --global http.cookiefile ${HOME}/.git-credential-cache/cookie
+        gerrit_url="https://cloudhpc.googlesource.com"
     fi
-    repo_dir=hpc-toolkit-blueprints
-    if [ ! -d ${repo_dir} ]; then
-        git clone ${gerrit_url}/${repo_dir}
-    else
-        pushd ${repo_dir}
-        git pull
-        popd
+    current_sa=$(curl -s -H "Metadata-Flavor: Google" http://metadata.google.internal/computeMetadata/v1/instance/service-accounts/default/email)
+    current_sa_hash=$(echo -n "${current_sa}" | sha256sum | awk '{print $1}')
+    sa_authorized=false
+    for hash in "${ALLOWED_SA_HASHES[0]}"; do 
+        [ "${current_sa_hash}" = "${hash}" ] && (sa_authorized=true; break)
+    done
+    if [ ${sa_authorized} = true ]; then
+        repo_dir=hpc-toolkit-blueprints
+        if [ ! -d ${repo_dir} ]; then
+            git clone ${gerrit_url}/${repo_dir} && (
+                pushd ${repo_dir} && f=`git rev-parse --git-dir`/hooks/commit-msg
+                mkdir -p $(dirname $f)
+                curl -Lo $f https://gerrit-review.googlesource.com/tools/hooks/commit-msg
+                chmod +x $f
+                popd
+            )
+        else
+            pushd ${repo_dir}
+            git pull
+            popd
+        fi
+        repo_dir=spack-packages
+        if [ ! -d ${repo_dir} ]; then
+            git clone ${gerrit_url}/${repo_dir} && (
+                pushd ${repo_dir} && f=`git rev-parse --git-dir`/hooks/commit-msg
+                mkdir -p $(dirname $f)
+                curl -Lo $f https://gerrit-review.googlesource.com/tools/hooks/commit-msg
+                chmod +x $f
+                popd
+            )
+        else
+            pushd ${repo_dir}
+            git pull
+            popd
+        fi
+        repo_dir=ramble-applications
+        if [ ! -d ${repo_dir} ]; then
+            git clone ${gerrit_url}/${repo_dir} && (
+                pushd ${repo_dir} && f=`git rev-parse --git-dir`/hooks/commit-msg
+                mkdir -p $(dirname $f)
+                curl -Lo $f https://gerrit-review.googlesource.com/tools/hooks/commit-msg
+                chmod +x $f
+                popd
+            )
+        else
+            pushd ${repo_dir}
+            git pull
+            popd
+        fi
     fi
     popd
 
@@ -497,20 +556,19 @@ EOF
         echo 'alias rws="ramble workspace setup"' >> ${CUSTOM_ALIAS_FILE}
     fi
     popd
-    # Python venv
-    if [ ! -d ${HOME}/.venv ]; then
-        python3 -m venv ${HOME}/.venv
-    fi
-    source ${HOME}/.venv/bin/activate
-    pip install --upgrade pip
     pip install -r ${git_dir}/ramble/requirements.txt
     pip install -r ${git_dir}/ramble/requirements-dev.txt
     if [ ! -x ${git_dir}/ramble/.git/hooks/pre-commit ]; then
         pushd ${git_dir}/ramble
         pre-commit install
     fi
-    if ! $( ramble repo list | grep -q "${gerrit_dir}/ramble-applications" ); then
-        ramble repo add "${gerrit_dir}/ramble-applications"
+    if [ ${sa_authorized} = true ]; then
+        if ! $( ramble repo list | grep -q "${gerrit_dir}/ramble-applications" ); then
+            ramble repo add "${gerrit_dir}/ramble-applications"
+        fi
+        if ! $( spack repo list | grep -q "${gerrit_dir}/spack-packages" ); then
+            spack repo add "${gerrit_dir}/spack-packages"
+        fi
     fi
 fi
 
