@@ -24,7 +24,7 @@ run_task "Configure Terminal Defaults" setup_terminal
 
 # Check Bash version and upgrade if necessary
 if (( BASH_VERSINFO <= 4 )); then
-    local new_bash="/usr/local/bin/bash"
+    new_bash="/usr/local/bin/bash"
     [ "$(uname -m)" = "arm64" ] && new_bash="/opt/homebrew/bin/bash"
 
     if [ -x "$new_bash" ]; then

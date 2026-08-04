@@ -79,7 +79,7 @@ fi
 # 4. Authorized GCP SA Repositories
 # Fix: Bug #1 - Correctly uses our is_gcp_authorized helper which fixes the array typo
 if is_gcp_authorized; then
-    local gerrit_url="https://cloudhpc.googlesource.com"
+    gerrit_url="https://cloudhpc.googlesource.com"
     is_privileged && gerrit_url="sso://cloudhpc"
 
     run_task "Setup hpc-toolkit-blueprints" setup_gerrit_repo "${gerrit_url}/hpc-toolkit-blueprints" "${GERRIT_DIR}/hpc-toolkit-blueprints"
@@ -92,10 +92,10 @@ GIT_DIR="${HOME}/git"
 mkdir -p "$GIT_DIR"
 
 # Cluster Toolkit (Hybrid Binary/Source)
-local CLUSTER_TOOLKIT_DIR="${GIT_DIR}/cluster-toolkit"
+CLUSTER_TOOLKIT_DIR="${GIT_DIR}/cluster-toolkit"
 
-local BUNDLE_OS=""
-local BUNDLE_ARCH=""
+BUNDLE_OS=""
+BUNDLE_ARCH=""
 is_mac && BUNDLE_OS="darwin"
 is_linux && BUNDLE_OS="linux"
 
@@ -104,8 +104,8 @@ case "$(uname -m)" in
     aarch64|arm64) BUNDLE_ARCH="arm64" ;;
 esac
 
-local use_binary=false
-local bundle_name=""
+use_binary=false
+bundle_name=""
 if [ -n "$BUNDLE_OS" ] && [ -n "$BUNDLE_ARCH" ]; then
     use_binary=true
     bundle_name="gcluster_bundle_${BUNDLE_OS}_${BUNDLE_ARCH}.tgz"
