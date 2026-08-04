@@ -15,8 +15,11 @@ if command -v gcloud >/dev/null 2>&1; then
     alias gcssh="gcloud compute ssh"
 fi
 
-# --- Cluster Toolkit (ghpc) ---
-if command -v ghpc >/dev/null 2>&1; then
+# --- Cluster Toolkit (gcluster / ghpc) ---
+if command -v gcluster >/dev/null 2>&1; then
+    alias gcd="gcluster deploy"
+    alias gcx="gcluster destroy"
+elif command -v ghpc >/dev/null 2>&1; then
     alias gcd="ghpc deploy"
     alias gcx="ghpc destroy"
 fi

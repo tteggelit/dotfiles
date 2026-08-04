@@ -91,11 +91,75 @@ fi
 GIT_DIR="${HOME}/git"
 mkdir -p "$GIT_DIR"
 
-# Cluster Toolkit
-run_task "Setup Cluster Toolkit" git_clone_or_pull "git@github.com:GoogleCloudPlatform/cluster-toolkit.git" "${GIT_DIR}/cluster-toolkit"
-if [ -d "${GIT_DIR}/cluster-toolkit" ]; then
-    run_task "Build Cluster Toolkit" "pushd ${GIT_DIR}/cluster-toolkit >/dev/null && make && popd >/dev/null"
-    export PATH="${PATH}:${GIT_DIR}/cluster-toolkit"
+# Cluster Toolkit (Hybrid Binary/Source)
+local CLUSTER_TOOLKIT_DIR="${GIT_DIR}/cluster-toolkit"
+
+local BUNDLE_OS=""
+local BUNDLE_ARCH=""
+is_mac && BUNDLE_OS="darwin"
+is_linux && BUNDLE_OS="linux"
+
+case "$(uname -m)" in
+    x86_64) BUNDLE_ARCH="amd64" ;;
+    aarch64|arm64) BUNDLE_ARCH="arm64" ;;
+esac
+
+local use_binary=false
+local bundle_name=""
+if [ -n "$BUNDLE_OS" ] && [ -n "$BUNDLE_ARCH" ]; then
+    use_binary=true
+    bundle_name="gcluster_bundle_${BUNDLE_OS}_${BUNDLE_ARCH}.tgz"
+fi
+
+if [ "$use_binary" = true ]; then
+    download_cluster_toolkit() {
+        local tmp_dir="${PYLOCAL:-${HOME}/.local}/tmp"
+        mkdir -p "$tmp_dir"
+
+        local version
+        version=$(git ls-remote --tags --refs --sort='version:refname' https://github.com/GoogleCloudPlatform/cluster-toolkit.git 2>/dev/null | tail -n 1 | cut -f2 | cut -d/ -f3)
+
+        if [ -z "$version" ]; then
+            version="v1.98.0" # Fallback if git fails
+        fi
+
+        local url="https://github.com/GoogleCloudPlatform/cluster-toolkit/releases/download/${version}/${bundle_name}"
+
+        pushd "$tmp_dir" >/dev/null
+        [ -f "$bundle_name" ] && rm -f "$bundle_name"
+        curl -s -S -L -O "$url" || return 1
+
+        rm -rf "$CLUSTER_TOOLKIT_DIR"
+        mkdir -p "$CLUSTER_TOOLKIT_DIR"
+        tar zxf "$bundle_name" -C "$CLUSTER_TOOLKIT_DIR" || return 1
+        rm -f "$bundle_name"
+        popd >/dev/null
+
+        chmod +x "${CLUSTER_TOOLKIT_DIR}/gcluster"
+        return 0
+    }
+    run_task "Download pre-compiled Cluster Toolkit bundle (${BUNDLE_OS}/${BUNDLE_ARCH})" download_cluster_toolkit
+else
+    run_task "Setup Cluster Toolkit (Source)" git_clone_or_pull "git@github.com:GoogleCloudPlatform/cluster-toolkit.git" "$CLUSTER_TOOLKIT_DIR"
+
+    if [ -d "$CLUSTER_TOOLKIT_DIR" ]; then
+        build_cluster_toolkit() {
+            if ! command -v go >/dev/null 2>&1 || ! command -v terraform >/dev/null 2>&1; then
+                echo "Warning: Build requirements (Go, Terraform) are missing. Skipping Cluster Toolkit build."
+                return 0
+            fi
+
+            pushd "$CLUSTER_TOOLKIT_DIR" >/dev/null
+            make || return 1
+            popd >/dev/null
+            return 0
+        }
+        run_task "Build Cluster Toolkit" build_cluster_toolkit
+    fi
+fi
+
+if [ -d "$CLUSTER_TOOLKIT_DIR" ]; then
+    export PATH="${PATH}:${CLUSTER_TOOLKIT_DIR}"
 fi
 
 # Spack
