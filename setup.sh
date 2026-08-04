@@ -357,52 +357,80 @@ if [ ${PROFILE} = "work" ]; then
     if command -v go > /dev/null 2>&1; then
         export PATH=${PATH}:$(go env GOPATH)/bin
     fi
+    gerrit_dir="${HOME}/gerrit"
+    [ ! -d ${gerrit_dir} ] && install -d ${gerrit_dir}
+    pushd ${gerrit_dir}
+
+    if [ ${PRIVILEGED} = "yes" ]; then
+        gerrit_url="sso://cloudhpc"
+        repo_dir=sup-ssh-utils
+        if [ ! -d ${repo_dir} ]; then
+            git clone ${gerrit_url}/${repo_dir}
+        fi
+        pushd ${repo_dir}
+        git pull
+        export PATH=${gerrit_dir}/${repo_dir}:${PATH}
+        ./setup-gcp-ssh-host.bash
+        popd
+    else
+        gerrit_url="https://cloudhpc.googlesource.com"
+        repo_dir=gcompute-tools
+        if [ ! -d ${repo_dir} ]; then
+            git clone https://gerrit.googlesource.com/${repo_dir}
+        else
+            pushd ${repo_dir}
+            git pull
+            popd
+        fi
+        systemd_user_path="${HOME}/.config/systemd/user"
+        [ ! -d ${systemd_user_path} ] && install -d ${systemd_user_path}
+        cat > ${systemd_user_path}/git-cookie-authdaemon.service << EOF
+[Unit]
+Description=git-cookie-authdaemon required to access git-on-borg from GCE
+
+Wants=network.target
+After=syslog.target network-online.target
+
+[Service]
+Type=simple
+ExecStart=${gerrit_dir}/${repo_dir}/git-cookie-authdaemon
+Restart=on-failure
+RestartSec=10
+KillMode=process
+
+[Install]
+WantedBy=multi-user.target
+EOF
+    fi
+    repo_dir=hpc-toolkit-blueprints
+    if [ ! -d ${repo_dir} ]; then
+        git clone ${gerrit_url}/${repo_dir}
+    else
+        pushd ${repo_dir}
+        git pull
+        popd
+    fi
+    popd
+
     git_dir="${HOME}/git"
     [ ! -d ${git_dir} ] && install -d ${git_dir}
     pushd ${git_dir}
-    if [ ${PRIVILEGED} = "yes" ]; then
-        repo_dir=sup-ssh-utils
-        if [ ! -d ${repo_dir} ]; then
-            git clone sso://cloudhpc/sup-ssh-utils
-        fi
-        pushd ${repo_dir}
-        git pull
-        export PATH=${git_dir}/sup-ssh-utils:${PATH}
-        ./setup-gcp-ssh-host.bash
-        popd
-        # Cluster Toolkit Contiguration
-        repo_dir=cluster-toolkit
-        if [ ! -d ${repo_dir} ]; then
-            git clone git@github.com:GoogleCloudPlatform/cluster-toolkit.git
-        fi
-        pushd ${repo_dir}
-        git pull
-        make
-        popd
-        export PATH=${PATH}:${HOME}/git/cluster-toolkit
-        if command -v ghpc >/dev/null 2>&1 && { [ ! -f "${CUSTOM_COMPL_FILE}" ] || ! grep -q "gcluster" "${CUSTOM_COMPL_FILE}"; }; then
-            ghpc completion bash >> ${HOME}/.bash_it/completion/custom.completion.bash
-        fi
-        repo_dir=hpc-toolkit-blueprints
-        if [ ! -d ${repo_dir} ]; then
-            git clone sso://cloudhpc/hpc-toolkit-blueprints
-        else
-            pushd ${repo_dir}
-            git pull
-            popd
-        fi
-        repo_dir=gcompute-tools
-        if [ ! -d ${repo_dir} ]; then
-            git clone https://gerrit.googlesource.com/gcompute-tools
-        else
-            pushd ${repo_dir}
-            git pull
-            popd
-        fi
+    # Cluster Toolkit Contiguration
+    repo_dir=cluster-toolkit
+    if [ ! -d ${repo_dir} ]; then
+        git clone git@github.com:GoogleCloudPlatform/${repo_dir}.git
+    fi
+    pushd ${repo_dir}
+    git pull
+    make
+    popd
+    export PATH=${PATH}:${git_dir}/${repo_dir}
+    if command -v ghpc >/dev/null 2>&1 && { [ ! -f "${CUSTOM_COMPL_FILE}" ] || ! grep -q "gcluster" "${CUSTOM_COMPL_FILE}"; }; then
+        ghpc completion bash >> ${HOME}/.bash_it/completion/custom.completion.bash
     fi
     repo_dir=spack
     if [ ! -d ${repo_dir} ]; then
-        git clone --depth=2 https://github.com/spack/spack.git
+        git clone --depth=2 https://github.com/spack/${repo_dir}.git
     else
         pushd ${repo_dir}
         git pull
@@ -410,26 +438,31 @@ if [ ${PROFILE} = "work" ]; then
         git checkout tags/v${SPACK_VERSION}
         popd
     fi
+    [ -f ${git_dir}/spack/share/spack/setup-env.sh ] && source ${git_dir}/spack/share/spack/setup-env.sh
     repo_dir=spack-packages
     if [ ! -d ${repo_dir} ]; then
-        git clone --depth=2 git@github.com:tteggelit/spack-packages.git
+        git clone --depth=2 git@github.com:tteggelit/${repo_dir}.git
     else
         pushd ${repo_dir}
         git pull
-        git remote add upstream https://github.com/spack/spack-packages.git
+        git remote add upstream https://github.com/spack/${repo_dir}.git
         git fetch upstream
         popd
+    fi
+    if ! $( spack repo list | grep -q "${gerrit_dir}/spack-packages" ); then
+        spack repo add "${gerrit_dir}/spack-packages"
     fi
     repo_dir=ramble
     if [ ! -d ${repo_dir} ]; then
-        git clone -c feature.manyfiles=true git@github.com:tteggelit/ramble.git
+        git clone -c feature.manyfiles=true git@github.com:tteggelit/${repo_dir}.git
     else
         pushd ${repo_dir}
         git pull
-        git remote add upstream https://github.com/GoogleCloudPlatform/ramble.git
+        git remote add upstream https://github.com/GoogleCloudPlatform/${repo_dir}.git
         git fetch upstream
         popd
     fi
+    [ -f ${git_dir}/ramble/share/ramble/setup-env.sh ] && source ${git_dir}/ramble/share/ramble/setup-env.sh
     if [ ! -f "${CUSTOM_ALIAS_FILE}" ] || ! grep -q "prw" "${CUSTOM_ALIAS_FILE}"; then
         echo 'alias prw="pushd ${RAMBLE_WORKSPACE}"' >> ${CUSTOM_ALIAS_FILE}
     fi
@@ -475,6 +508,9 @@ if [ ${PROFILE} = "work" ]; then
     if [ ! -x ${git_dir}/ramble/.git/hooks/pre-commit ]; then
         pushd ${git_dir}/ramble
         pre-commit install
+    fi
+    if ! $( ramble repo list | grep -q "${gerrit_dir}/ramble-applications" ); then
+        ramble repo add "${gerrit_dir}/ramble-applications"
     fi
 fi
 
