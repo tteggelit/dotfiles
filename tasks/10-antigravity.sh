@@ -6,33 +6,40 @@
 IDE_VERSION="2.5.0-5471848641724416"
 
 # 1. Determine if sudo will be required, and refresh credentials in the foreground
-# if needed, so the background spinners do not hang.
+# if needed, so both the checks and background spinners do not hang.
 needs_sudo=false
-if is_mac && is_work && { [ ! -d "/Applications/Jetski.app" ] || ! command -v jetski-cli >/dev/null 2>&1; }; then
-    needs_sudo=true
-fi
-if is_mac && ! is_work && [ ! -d "/Applications/Antigravity.app" ] && [ ! -d "/Applications/Antigravity IDE.app" ]; then
-    needs_sudo=true
+if is_privileged && is_mac; then
+    if is_work; then
+        needs_sudo=true
+    elif [ ! -d "/Applications/Antigravity.app" ] && [ ! -d "/Applications/Antigravity IDE.app" ]; then
+        needs_sudo=true
+    fi
 fi
 
-if is_privileged && [ "$needs_sudo" = true ]; then
+if [ "$needs_sudo" = true ]; then
     echo "--> Refreshing sudo credentials for Antigravity/Jetski installations..."
     sudo -v
 fi
 
-# 2. Jetski IDE & CLI (Work macOS Only)
-if is_mac && is_work; then
-    install_jetski() {
-        sudo mule install jetski jetski-cli
+# 2. Jetski IDE & CLI (Work macOS Only - Requires Privileged)
+if is_privileged && is_mac && is_work; then
+    install_jetski_ide() {
+        sudo mule install jetski
+    }
+    install_jetski_cli() {
+        sudo mule install jetski-cli
     }
 
-    if [ ! -d "/Applications/Jetski.app" ] || ! command -v jetski-cli >/dev/null 2>&1; then
-        run_task "Install Jetski IDE and CLI via Mule" install_jetski
+    if ! sudo mule check jetski 2>/dev/null | grep -q "found expected install"; then
+        run_task "Install Jetski IDE via Mule" install_jetski_ide
+    fi
+    if ! sudo mule check jetski-cli 2>/dev/null | grep -q "found expected install"; then
+        run_task "Install Jetski CLI via Mule" install_jetski_cli
     fi
 fi
 
-# 3. Antigravity IDE (Non-Work macOS Only)
-if is_mac && ! is_work; then
+# 3. Antigravity IDE (Non-Work macOS Only - Requires Privileged)
+if is_privileged && is_mac && ! is_work; then
     install_antigravity_ide() {
         local tmp_dir="${PYLOCAL:-${HOME}/.local}/tmp"
         mkdir -p "$tmp_dir"
@@ -64,6 +71,7 @@ if is_mac && ! is_work; then
 fi
 
 # 4. Antigravity CLI (All hosts without Jetski, EXCEPT Work MacBooks)
+# (Does not require Privileged, installs to user-space ~/.local/bin/)
 if ! { is_mac && is_work; } && [ ! -d "/google" ] && ! command -v jetski-cli >/dev/null 2>&1 && ! command -v jetski >/dev/null 2>&1; then
     if ! command -v agy >/dev/null 2>&1; then
         run_task "Install Antigravity CLI" "curl -fsSL https://antigravity.google/cli/install.sh | bash"
