@@ -75,7 +75,7 @@ if ! command -v pandoc >/dev/null 2>&1; then
 
             pushd "$tmp_dir" >/dev/null
             [ -f "$tarball" ] && rm -f "$tarball"
-            curl -s -S -L -O "https://github.com/jgm/pandoc/releases/download/${PANDOC_VER}/${tarball}" || return 1
+            curl -s -S -L -O -f "https://github.com/jgm/pandoc/releases/download/${PANDOC_VER}/${tarball}" || return 1
             tar zxf "$tarball" -C "${PYLOCAL}" || return 1
             rm -f "$tarball"
             popd >/dev/null

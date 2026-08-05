@@ -96,7 +96,7 @@ CLUSTER_TOOLKIT_DIR="${GIT_DIR}/cluster-toolkit"
 
 BUNDLE_OS=""
 BUNDLE_ARCH=""
-is_mac && BUNDLE_OS="darwin"
+is_mac && BUNDLE_OS="mac"
 is_linux && BUNDLE_OS="linux"
 
 case "$(uname -m)" in
@@ -127,7 +127,7 @@ if [ "$use_binary" = true ]; then
 
         pushd "$tmp_dir" >/dev/null
         [ -f "$bundle_name" ] && rm -f "$bundle_name"
-        curl -s -S -L -O "$url" || return 1
+        curl -s -S -L -O -f "$url" || return 1
 
         rm -rf "$CLUSTER_TOOLKIT_DIR"
         mkdir -p "$CLUSTER_TOOLKIT_DIR"
