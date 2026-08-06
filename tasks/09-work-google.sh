@@ -168,6 +168,11 @@ if [ -f "${GIT_DIR}/spack/share/spack/setup-env.sh" ]; then
     source "${GIT_DIR}/spack/share/spack/setup-env.sh"
 fi
 
+if command -v spack >/dev/null 2>&1; then
+    run_task "Find Spack compilers" "spack compiler find"
+    run_task "Bootstrap Spack" "spack bootstrap now"
+fi
+
 # Spack-packages (GitHub Fork)
 # Fix: Bug #5 - Using setup_github_fork safely adds upstream without failing if it exists
 run_task "Setup Spack-packages Fork" setup_github_fork "git@github.com:tteggelit/spack-packages.git" "${GIT_DIR}/spack-packages" "https://github.com/spack/spack-packages.git" --depth=2
@@ -187,6 +192,8 @@ if [ -d "${GIT_DIR}/ramble" ]; then
     if command -v pre-commit >/dev/null 2>&1 && [ ! -x "${GIT_DIR}/ramble/.git/hooks/pre-commit" ]; then
         run_task "Install Ramble pre-commit hooks" "pushd ${GIT_DIR}/ramble >/dev/null && pre-commit install && popd >/dev/null"
     fi
+
+    run_task "Configure default Ramble config" symlink_file "${DOTFILES_DIR}/config/ramble/config.yaml" "${HOME}/.ramble/config.yaml"
 fi
 
 # Add repos to spack/ramble
